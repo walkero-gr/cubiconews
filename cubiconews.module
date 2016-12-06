@@ -1,0 +1,1096 @@
+<?php 
+/**
+ * @file
+ * Cubiconews module file
+ *
+ * Created by George Sokianos (walkero@gmail.com)
+ *
+ */
+ 
+ 
+define('CUBICONEWS_CRON_SEND_TIME', '23:00:00');
+define('CUBICONEWS_MAX_DCC', '2');
+ 
+ 
+/**
+ * Implements hook_permission().
+ */
+function cubiconews_permission() {
+  return array(
+    'administer cubiconews' => array(
+      'title' => t('Administer Cubiconews'),
+      'description' => t('Perform administrative actions with Cubiconews Newsletter system.'),
+    ),
+    'create cubiconews newsletter' => array(
+      'title' => t('Create newsletter'),
+      'description' => t('Allows access to newsletters.')
+    ),
+    'administer cubiconews emails' => array(
+      'title' => t('Administer emails'),
+      'description' => t('Allow access to the receipients emails.'),
+    ),
+    'send cubiconews newsletter' => array(
+      'title' => t('Send a newsletter'),
+      'description' => t('Allow access to send a newsletter to the receipients.'),
+    ),
+  );
+}
+ 
+/**
+ * Implementation of hook_menu().
+ */
+function cubiconews_menu() {
+  $items['cubiconews'] = array(
+    'title' => 'CubicoNews',
+    'description' => 'Manage Cubiconews Newsletter System.',
+    'page callback' => '_cubiconews_newsletter_list',
+    'page arguments' => array(1),
+    'access arguments' => array('administer cubiconews'),
+    'type' => MENU_LOCAL_TASK | MENU_NORMAL_ITEM,
+    'file' => 'cubiconews.pages.inc',
+	'menu_name' => 'management',
+  );
+  /* OBSOLETE
+  $items['cubiconews/newsletters'] = array(
+    'title' => 'Newsletters',
+    'description' => 'Manage Cubiconews Newsletters.',
+    'page callback' => '_cubiconews_newsletter_list',
+    'page arguments' => array(1),
+    'access arguments' => array('create cubiconews newsletter'),
+    'type' => MENU_LOCAL_TASK | MENU_NORMAL_ITEM,
+    'file' => 'cubiconews.pages.inc',
+	'menu_name' => 'management',	
+  );
+  */
+  /* OBSOLETE
+  $items['cubiconews/newsletters/add'] = array(
+    'title' => t('Create new newsletter'),
+    'description' => t('Create new Cubiconews Newsletter'),
+    'page callback' => '_cubiconews_newsletter_addnew',
+    'page arguments' => array(1),
+    'access arguments' => array('create cubiconews newsletter'),
+    'type' => MENU_LOCAL_TASK | MENU_NORMAL_ITEM,
+    'file' => 'cubiconews.pages.inc',
+	'menu_name' => 'management',
+  );
+  */
+  $items['cubiconews/newsletters/emails'] = array(
+    'title' => t('Recipients'),
+    'description' => t('Manage Cubiconews Newsletter Recipients'),
+    'page callback' => '_cubiconews_emails',
+    'page arguments' => array(1),
+    'access arguments' => array('administer cubiconews emails'),
+    'type' => MENU_LOCAL_TASK | MENU_NORMAL_ITEM,
+    'file' => 'cubiconews.pages.inc',
+  );
+  
+  $items['cubiconews/newsletters/emails/add'] = array(
+    'title' => t('Add new emails'),
+    'description' => t('Add new recipients'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_cubiconews_emails_add_form'),
+    'access arguments' => array('administer cubiconews emails'),
+    'type' => MENU_LOCAL_TASK | MENU_NORMAL_ITEM,
+    'file' => 'cubiconews.pages.inc',
+  );
+  /* OBSOLETE
+  $items['node/%node/cubiconews_add'] = array(
+    'access callback' => '_check_node_user_access',
+    'access arguments' => array(1),
+    'page callback' => 'cubiconews_add_node',
+    'page arguments' => array(1),
+    'title' => t('Add to Newsletter'),
+    //'title callback' => 'cubiconews_action_link_title',
+    //'title arguments' => array(1),
+    'weight' => 10,
+    'file' => 'cubiconews.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    //'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
+  */
+  /* OBSOLETE
+  $items['cubiconews/removeitem'] = array(
+    'title' => '',
+    'page callback' => 'remove_item',
+    'page arguments' => array(),
+    'access callback' => 'user_access',
+    'access arguments' => array('create cubiconews newsletter'),
+    'type' => MENU_CALLBACK
+  );
+  */
+  /* OBSOLETE
+  $items['cubiconews/updorder'] = array(
+    'title' => '',
+    'page callback' => '_update_order',
+    'page arguments' => array(),
+    'access callback' => 'user_access',
+    'access arguments' => array('create cubiconews newsletter'),
+    'type' => MENU_CALLBACK
+  );
+  */
+  /* OBSOLETE
+  $items['cubiconews/preview'] = array(
+    'title' => '',
+    'page callback' => '_cubiconews_preview',
+    'page arguments' => array(1),
+    'access callback' => 'user_access',
+    'access arguments' => array('create cubiconews newsletter'),
+    'type' => MENU_CALLBACK
+  );
+  */
+  
+  $items['cubiconews/finalize'] = array(
+    'title' => '',
+    'page callback' => '_cubiconews_finalize',
+    'page arguments' => array(1),
+    'access callback' => 'user_access',
+    'access arguments' => array('create cubiconews newsletter'),
+    'type' => MENU_CALLBACK
+  );
+  
+  /* OBSOLETE
+  $items['cubiconews/removenewsletter'] = array(
+    'title' => '',
+    'page callback' => '_cubiconews_removenewsletter',
+    'page arguments' => array(1),
+    'access callback' => 'user_access',
+    'access arguments' => array('create cubiconews newsletter'),
+    'type' => MENU_CALLBACK
+  );
+  */
+  $items['cubiconews/sendnow'] = array(
+    'title' => '',
+    'page callback' => '_cubiconews_manual_send', //'_cubiconews_send',
+    'page arguments' => array(1),
+    'access callback' => 'user_access',
+    'access arguments' => array('send cubiconews newsletter'),
+    'type' => MENU_CALLBACK
+  );
+  
+  $items['cubiconews/registration_success'] = array(
+    'title' => t('Succesful subscription'),
+    'page callback' => '_cubiconews_register_ok',
+    'page arguments' => array(1),
+    'access callback' => 'user_access',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+  
+  $items['cubiconews/registration_remove'] = array(
+    'title' => t('Unsubscribe from our Newsletter'),
+    'description' => t('Remove your email from our Newsletter receivers'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_cubiconews_newsletter_remove_email_form'),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['cubiconews/removal_success'] = array(
+    'title' =>  t('Succesful subscription removal'),
+    'page callback' => '_cubiconews_email_remove_ok',
+    'page arguments' => array(1),
+    'access callback' => 'user_access',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+  
+  $items['admin/config/content/cubiconews'] = array(
+    'title' =>  t('Cubiconews Newsletter'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_cubiconews_admin_preferences_form'),
+    'access arguments' => array('administer cubiconews'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'cubiconews.admin.inc',
+	'description' => 'Configure the Cubiconews Newsletter'
+  );
+  
+  $items['admin/config/content/cubiconews/general'] = array(
+    'title' => 'General',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'access arguments' => array('administer cubiconews'),
+    'weight' => -1,
+  );
+  
+  $items['admin/config/content/cubiconews/newsletters'] = array(
+    'title' => 'Newsletters',
+    'description' => 'Manage Cubiconews Newsletters.',
+    'page callback' => '_cubiconews_newsletter_list',
+    'page arguments' => array(1),
+    'access arguments' => array('create cubiconews newsletter'),
+    'type' => MENU_LOCAL_TASK | MENU_NORMAL_ITEM,
+    'file' => 'cubiconews.pages.inc',
+	'menu_name' => 'management',	
+  );
+  
+  return $items;
+} 
+
+
+function cubiconews_access($node){
+	return true;
+}
+
+
+/*
+ * Check if the user has access to add an article to cubiconews by clone
+ * and if the node type is configured from the CubiConews prefrences
+ * to have the clone link at the top
+ */
+function _check_node_user_access($node){
+	global $user;
+	$access = FALSE;
+	$nodeavailability = variable_get('cubiconews_config_selected_contenttypes', array());
+	
+	if(user_access('create cubiconews newsletter')) {
+		if(array_search($node->type, $nodeavailability, true)) {
+			$access = TRUE;
+		} else {
+			$access = FALSE;
+		}
+	} else {
+		$access = FALSE;
+	}	
+	
+	return $access;
+}
+
+
+
+
+/**
+ * OBSOLETE
+ * Menu title callback.
+ */
+//function cubiconews_action_link_title($node) {
+  // A hack to present a shorter title in contextual links.
+//  if (current_path() != 'node/' . $node->nid) {
+//    return t('Cubiconews');
+//  }
+  //if (variable_get('clone_use_node_type_name', 0)) {
+   // return t('cubiconews this !type', array('!type' => drupal_strtolower(node_type_get_name($node))));
+  //}
+//  return t('Add to Newsletter');
+//}
+
+
+/**
+ * Implements hook_image_default_styles().
+ */
+function cubiconews_image_default_styles() {
+  $styles = array();
+  $styles['newsletter_thumb'] = array(
+    'effects' => array(
+      array(
+        'name' => 'image_scale_and_crop',
+        'data' => array('width' => 180, 'height' => 100),
+        'weight' => 0,
+      ),
+    )
+  );
+  return $styles;
+}
+
+
+
+/**
+ * Implements hook_block_info().
+ */
+function cubiconews_block_info() {
+  $blocks['cubiconews_register_email'] = array(
+    'info' => t('Cubiconews: Visitors register their email'),
+    'cache' => DRUPAL_CACHE_PER_ROLE, // default
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function cubiconews_block_configure($delta = '') {
+  $form = array();
+  if ($delta == 'cubiconews_register_email') {
+    $form['block_cubiconews_email_string'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Block message'),
+      '#size' => 60,
+      '#description' => t('This text will appear in the newsletter block.'),
+      '#default_value' => variable_get('block_cubiconews_email_string',  t('Insert here your email if you want to receive our Newsletter.')),
+    );
+  }
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ *
+ * This hook declares how the configured options for a block
+ * provided by this module are saved.
+ */
+function cubiconews_block_save($delta = '', $edit = array()) {
+  // We need to save settings from the configuration form.
+  // We need to check $delta to make sure we are saving the right block.
+  if ($delta == 'cubiconews_register_email') {
+    // Have Drupal save the string to the database.
+    variable_set('block_cubiconews_email_string', $edit['block_cubiconews_email_string']);
+  }
+  return;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * This hook generates the contents of the blocks themselves.
+ */
+function cubiconews_block_view($delta = '') {
+  //The $delta parameter tells us which block is being requested.
+  $block = array();
+  switch ($delta) {
+    case 'cubiconews_register_email':
+      // The subject is displayed at the top of the block. Note that it
+      // should be passed through t() for translation. The title configured
+      // for the block using Drupal UI supercedes this one.
+      $block['subject'] = t('Newsletter');
+      $block['content'] = drupal_get_form('cubiconews_register_block_form');
+      break;
+  }
+  return $block;
+}
+
+
+function cubiconews_register_block_form($form, &$form_submit){
+	$form = array();
+	$form['block_message'] =array(
+		'#markup' => variable_get('block_cubiconews_email_string',  t('Insert here your email if you want to receive our Newsletter.')),
+	);
+	$form['block_field'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Email'),
+		'#size' => 20,
+		'#maxlength' => 60,
+		'#default_value' => '',
+		'#required' => true
+	);
+	
+	$form['btn_submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save'),
+		'#name' => 'save',
+	);
+	
+	return $form;
+}
+
+/**
+ * Submit handler for cubiconews_register_block_form().
+ */
+function cubiconews_register_block_form_submit($form, &$form_state) {
+	$email_address = $form_state['values']['block_field'];
+	
+	_register_email($email_address);
+	// Check first if the email already exists in our database
+	/*$chk_email = db_select('cubiconews_emails', 'cube')
+        ->fields('cube')
+		->condition('email', $email_address,'=')
+		->execute();
+	$emails_num = $chk_email->rowCount();
+	if($emails_num == 0) {
+		$newsid = db_insert('cubiconews_emails')
+		  ->fields(array(
+		    'email' => $email_address,
+		    'status' => 1,
+		    'timestamp' => time(),
+		    //'created' => REQUEST_TIME,
+		  ))
+		  ->execute();
+	} else {
+		$enable_email = db_update('cubiconews_emails')
+			->fields(array(
+					'status' => 1,
+		    		'timestamp' => time(),
+				))
+			->condition('email', $email_address, '=')
+			->execute();
+	}*/
+
+	drupal_goto('cubiconews/registration_success');
+}
+
+
+/**
+ * Validation handler for cubiconews_register_block_form().
+ */
+function cubiconews_register_block_form_validate($form, &$form_state) {
+	$email_address = $form_state['values']['block_field'];
+
+	if (strlen(trim($email_address)) > 0) {	
+		if (!preg_match("/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/i", $email_address)) {
+			form_set_error('block_field', t('Your email address is not valid.'));
+		}
+	}
+
+}
+
+
+function _cubiconews_newsletter_remove_email_form ($form, &$form_submit){
+	$form = array();
+	$form['block_message'] =array(
+		'#markup' => t('In case you do not want to receive our newsletters anymore, insert your email at the following field to unsubscribe.'),
+	);
+	$form['block_field'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Email'),
+		'#size' => 20,
+		'#maxlength' => 60,
+		'#default_value' => '',
+		'#required' => true
+	);
+	
+	$form['btn_submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save'),
+		'#name' => 'save',
+	);
+	
+	return $form;
+}
+
+function _cubiconews_newsletter_remove_email_form_validate ($form, &$form_state){
+	$email_address = $form_state['values']['block_field'];
+
+	if (strlen(trim($email_address)) > 0) {	
+		if (!preg_match("/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/i", $email_address)) {
+			form_set_error('block_field', t('Your email address is not valid.'));
+		}
+	}
+}
+
+function _cubiconews_newsletter_remove_email_form_submit ($form, &$form_state){
+	$email_address = $form_state['values']['block_field'];
+	$disable_email = db_update('cubiconews_emails')
+			->fields(array(
+					'status' => 0
+				))
+			->condition('email', $email_address, '=')
+			->execute();
+			
+	drupal_goto('cubiconews/removal_success');
+}
+
+
+/**
+ * Implements hook_cron().
+ *
+ */
+function cubiconews_cron() {
+	
+	$curtimestamp = time();
+	$send_timestamp = mktime(0,10,0, date('m'), date('d'), date('Y'));
+	if($curtimestamp >= $send_timestamp) {
+		
+		// Get the latest unsent newsletter
+		$get_newsletters = db_select('cubiconews_newsletters', 'cubn')
+	        ->fields('cubn')
+			->condition('status', 0,'=')
+			->orderBy('newsid', 'ASC')
+			->range(0,1);
+		$newsletters_rs = $get_newsletters->execute();
+		$newsletters_row = $newsletters_rs->fetchAssoc();
+		$cur_newsletter_id = $newsletters_row['newsid'];
+		_cubiconews_cron_bcc_send($cur_newsletter_id);
+		//_cubiconews_cronsend();
+	
+	watchdog('cubiconews', 'Automatic Cron Executed %crontime. Current time %curtime', array('%crontime'=>$send_timestamp, '%curtime' => $curtimestamp), WATCHDOG_INFO);
+	}
+}
+
+
+/**
+ * Implements hook_custom_theme().
+ *
+ */
+function cubiconews_custom_theme() {
+	$themed_pages = array(
+		'cubiconews/newsletters/emails',
+		'cubiconews/newsletters/add',
+		'cubiconews/newsletters',
+		'cubiconews/newsletters/emails/add'
+	);
+	$alias = drupal_get_path_alias($_GET['q']);
+	if(in_array($alias, $themed_pages)) {
+		return variable_get('admin_theme');
+	} else {
+		return 1;
+	}
+}
+
+
+/**
+ * Implements hook_theme().
+ *
+ */
+/*
+function cubiconews_theme() {
+	return array(
+		'node_cubiconews_item' => array(
+			'template' => 'node-cubiconews-item'
+		)
+	);
+}
+*/
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function cubiconews_theme_registry_alter(&$theme_registry) {
+    // Defined path to the current module.
+    $module_path = drupal_get_path('module', 'cubiconews');
+    // Find all .tpl.php files in this module's folder recursively.
+    $template_file_objects = drupal_find_theme_templates($theme_registry, '.tpl.php', $module_path);
+    foreach ($template_file_objects as $key => $template_file_object) {
+        // If the template has not already been overridden by a theme.
+        if (!isset($theme_registry[$key]['theme path']) || !preg_match('#/themes/#', $theme_registry[$key]['theme path'])) {
+			print_r($template_file_object);
+            // Alter the theme path and template elements.
+            $theme_registry[$key]['theme path'] = $module_path;
+            $theme_registry[$key] = array_merge($theme_registry[$key], $template_file_object);
+            $theme_registry[$key]['type'] = 'module';
+        }
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Functions ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+function remove_item() {
+	if(is_numeric(arg(2)) && (arg(1) == 'removeitem')) {
+		// Get the CubiconNews item and delete the node
+		$query = db_select('cubiconews_nodes', 'cubn')
+	        ->fields('cubn', array('cubnid'))
+			->condition('cnid', arg(2),'=')
+			->range(0,1);
+		$result = $query->execute();
+		$record = $result->fetchAssoc();
+		node_delete($record['cubnid']);
+		
+		// Delete the CubiconNews item from the cubiconews_nodes table
+		db_delete('cubiconews_nodes')
+			->condition('cnid', arg(2))
+			->execute();
+	}
+
+	drupal_goto('cubiconews/newsletters/add');
+}
+
+function _update_order() {
+	$allids = unserialize($_POST['ids_array']);
+	
+	foreach($allids AS $curkey => $curid) {
+		$num_updated = db_update('cubiconews_nodes')
+			->fields(array(
+					'weight' => $_POST['fld-order'][$curkey]
+				))
+			->condition('cnid', $curid, '=')
+			->execute();
+	}
+	
+	drupal_goto('cubiconews/newsletters/add');
+}
+
+
+function prepNewsletter ($cur_newsletter = 0) {
+	$var_title = 'Espressonews Newsletter';
+	$var_logoimg = url('sites/default/files/resize/logo-220x65.png');
+	//<a href="http://www.espressonews.gr" target="_blank"><img src="" alt="Espressonews.gr Newsletter" title="Espressonews.gr Newsletter" border="0"></a>
+	$var_logourl = l('<img src="' . $var_logoimg . '" alt="Espressonews.gr Newsletter" title="Espressonews.gr Newsletter">', '<front>', array('html' => true, 'attributes' => array('target' => '_blank')));
+	$var_header = t(date('l')) . date(', d / m / Y');
+	$bullet_img = url(drupal_get_path('module', 'cubiconews') . "/readmore_bullet.png", array('absolute'=>true));
+	
+	// Load template file
+	$tplfile = drupal_get_path('module', 'cubiconews') . "/cubiconews.tpl.php";
+	$fd = fopen($tplfile, "rb");
+    $content = fread($fd, filesize($tplfile));
+    fclose($fd);
+
+	$query = db_select('cubiconews_nodes', 'cubn')
+        ->fields('cubn', array('cubnid', 'nid'))
+		->condition('newsid', $cur_newsletter,'=')
+		->orderBy('weight', 'ASC');
+	$result = $query->execute();
+	$articles_num = $result->rowCount();
+	
+	$randnum = time();
+	
+	$var_body = '';
+	/*
+	$var_body = '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
+	$var_body .= '<tr>';
+	$var_body .= '<td valign="top" align="center">';
+	
+	// NEWSLETTER - 728x90 TOP
+	$var_body .= "<iframe id='a8a78b23' name='a8a78b23' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=54&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='728' height='90'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=a6ae3ab6&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=54&amp;cb=" . $randnum . "&amp;n=a6ae3ab6' border='0' alt='' /></a></iframe>";
+
+	$var_body .= '</td>';
+	$var_body .= '</tr>';	
+	$var_body .= '</table>';
+	*/
+	
+	$var_body .= '<table cellpadding="5" cellspacing="4" border="0" width="100%">';
+	$var_body .= '<tr>';
+	$var_body .= '<td valign="top" align="left">';
+	
+	$var_body .= '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
+	$cnt=0;
+	//while($record = $result->fetchAssoc()) {
+	
+	for($i=$cnt; $i<3; $i++) {
+		$record = $result->fetchAssoc();
+		$curnode = node_load($record['cubnid']);
+
+		$var_body .= '<tr>';
+		$var_body .= '<td valign="top" align="right" style="border-bottom: 1px dashed #d7d7d7;">';
+		if(isset($curnode->field_imagethumb['und'][0]['uri'])) {
+			$var_body .= '<img src="' . image_style_url('newsletter_thumb', $curnode->field_imagethumb['und'][0]['uri']) . '" style="border: 6px solid #d7d7d7;">';
+		} else {
+			$var_body .= '<img src="' . url('sites/default/files/cubiconews_logo.jpg', array('absolute'=>true)) . '" width="180" height="70">';
+		}
+		$var_body .= '</td>';
+		$var_body .= '<td valign="top" align="left" style="border-bottom: 1px dashed #d7d7d7;">';
+		$var_body .= '<h3 style="margin: 0px 0px 10px 0px; font-size: 15px; font-family: Arial, Helvetica, sans-serif;">' . $curnode->title . '</h3>';
+		$var_body .= '<div style="font-size: 11px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;">' . $curnode->body['und'][0]['safe_value'] . '</div>';
+		$var_body .= '<div style="font-size: 11px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;"><a href="' . url('node/' . $record['nid'], array('absolute'=>true)) . '" target="_blank" style="color: #ea4526; text-decoration: none;"><img src="' . $bullet_img . '" style="float: left; margin: 3px 5px 0px 0px;">' . t('Read more') . '</a></div>';
+		$var_body .= '</td></tr>';	
+		//if($cnt == $articles_num - 6) {
+		//	break;
+		//} else {
+			$cnt++;
+		//}
+	}
+	$var_body .= '</table>';
+	
+	$var_body .= '</td>';
+	$var_body .= '<td valign="top" align="left">';
+	
+	// NEWSLETTER - 300x250 #1
+	$var_body .= "<iframe id='a698dd53' name='a698dd53' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=56&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='300' height='250'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=a53e9213&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=56&amp;cb=" . $randnum . "&amp;n=a53e9213' border='0' alt='' /></a></iframe>";
+	
+	$var_body .= '<br/><br/><a href="http://www.readpoint.com/espresso" target="_blank"><img src="http://www.espressonews.gr/sites/all/themes/framework/images/espresso-epaper.png" border="0"></a>';
+	$var_body .= '</td></tr>';	
+	$var_body .= '</table>';
+	
+
+	// Show 6 articles as title beside the square ad
+	$var_body .= '<table cellpadding="5" cellspacing="4" border="0" width="100%">';
+	$var_body .= '<tr><td style="margin: 0px 0px 0px 0px; font-size: 17px; font-family: Arial, Helvetica, sans-serif; color: #DD5137; border-bottom: 1px solid #FFB700;">Διαβάστε ακόμα...</td></tr>';
+	$var_body .= '<tr>';
+	$var_body .= '<td valign="top" align="left" style="border-bottom: 1px dashed #d7d7d7;">';
+	$var_body .= '<ul style="margin: 0px;">';
+	for($i=$cnt; $i< $articles_num-3; $i++) {
+		$record = $result->fetchAssoc();
+		$curnode = node_load($record['cubnid']);		
+		$var_body .= '<li style="margin: 0px 0px 0px 0px; font-size: 15px; font-family: Arial, Helvetica, sans-serif; color: #DD5137;"><a href="' . url('node/' . $record['nid'], array('absolute'=>true)) . '" target="_blank" style="color: #363636; text-decoration: none;">' . $curnode->title . '</a></li>';
+		//if($cnt == $articles_num - 3) {
+		//	break;
+		//} else {
+			$cnt++;
+		//}
+	}
+	$var_body .= '</ul>';
+	$var_body .= '</td>';
+	$var_body .= '<td width="300" style="border-bottom: 1px dashed #d7d7d7;">';
+	
+	// NEWSLETTER - 300x250 #2
+	//$var_body .= "<iframe id='a386a75c' name='a386a75c' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=57&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='300' height='250'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=a99ebe6a&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=57&amp;cb=" . $randnum . "&amp;n=a99ebe6a' border='0' alt='' /></a></iframe>";	
+
+	$var_body .= '</td>';
+	$var_body .= '</tr>';	
+	$var_body .= '</table>';
+
+
+	// Show the last 3 articles in different cells
+	$var_body .= '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
+	$col_cnt = 1;
+	$var_body .= '<tr>';
+	for($i=$cnt; $i< $articles_num; $i++) {
+		$record = $result->fetchAssoc();
+		$curnode = node_load($record['cubnid']);
+		
+		$var_body .= '<td valign="top" align="left" style="' . (($col_cnt < 3) ? 'border-right: 1px solid #ea4526;' : '') . ' padding: 0px 5px;">';
+		$var_body .= '<h3 style="margin: 0px 0px 10px 0px; font-size: 15px; font-family: Arial, Helvetica, sans-serif; color: #ffffff; background-color: #DD5137; padding: 5px; height: 60px; border-bottom: 3px solid #FFB700;">' . $curnode->title . '</h3>';
+		
+		$var_body .= '<div style="text-align: center;">';
+		if(isset($curnode->field_imagethumb['und'][0]['uri'])) {
+			$var_body .= '<img src="' . image_style_url('newsletter_thumb', $curnode->field_imagethumb['und'][0]['uri']) . '" style="border: 6px solid #d7d7d7;">';
+		} else {
+			$var_body .= '<img src="' . url('sites/default/files/cubiconews_logo.jpg', array('absolute'=>true)) . '" width="180" height="70">';
+		}
+		$var_body .= '</div>';
+		$var_body .= '<div style="font-size: 11px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;">' . $curnode->body['und'][0]['safe_value'] . '</div>';
+		$var_body .= '<div style="font-size: 12px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif; float: right;"><a href="' . url('node/' . $record['nid'], array('absolute'=>true)) . '" target="_blank" style="color: #ea4526; text-decoration: none;"><img src="' . $bullet_img . '" style="float: left; margin: 3px 5px 0px 0px;">' . t('Read more') . '</a></div>';
+		$var_body .= '</td>';
+		$col_cnt++;
+	}
+	$var_body .= '<tr>';	
+	$var_body .= '</table>';
+	
+	
+	$var_body .= '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
+	$var_body .= '<tr>';
+	$var_body .= '<td valign="top" align="center">';
+	
+	// NEWSLETTER - 728x90 Bottom
+	$var_body .= "<iframe id='a8b33dcd' name='a8b33dcd' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=55&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='728' height='90'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=ad72db22&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=55&amp;cb=" . $randnum . "&amp;n=ad72db22' border='0' alt='' /></a></iframe>";
+
+	$var_body .= '</td>';
+	$var_body .= '</tr>';	
+	$var_body .= '</table>';
+	
+	
+	$var_footer = '<a href="' . url('node/18', array('absolute'=>true)) . '" target="_blank">Όροι Χρήσης</a> | <a href="' . url('node/19', array('absolute'=>true)) . '" target="_blank">Επικοινωνία</a> | <a href="' . url('node/20', array('absolute'=>true)) . '" target="_blank">Διαφήμιση</a> © 2007-' . date('Y') . ', Espresso'; 
+	$var_footer .= '<p>ΑΠΑΓΟΡΕΥΕΤΑΙ η αναδημοσίευση, η αναπαραγωγή, ολική, μερική ή περιληπτική ή κατά παράφραση ή διασκευή απόδοση του περιεχομένου του παρόντος web site με οποιονδήποτε τρόπο, ηλεκτρονικό, μηχανικό, φωτοτυπικό, ηχογράφησης ή άλλο, χωρίς προηγούμενη γραπτή άδεια του εκδότη.</p>';
+	$var_footer .= '<p style="text-align: left;">' . t('If you would like to unsubscribe from our newsletter email list,') . ' <a href="' . url('cubiconews/registration_remove', array('absolute'=>true)) . '">' . t('please click here') . '</a></p>';
+	
+	
+	$var_socials = '<span>';
+	$var_socials .= '<a href="http://facebook.com/espressonews.gr" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/facebook.resized.png', array('absolute'=>true)) . '" border="0" alt="Facebook" title="Βρείτε μας στο Facebook" /></a>&nbsp;';
+	$var_socials .= '<a href="http://twitter.com/espressonews_gr" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/twitter.resized.png', array('absolute'=>true)) . '" border="0" alt="Twitter" title="Βρείτε μας στο Twitter" /></a>&nbsp;';
+	$var_socials .= '<a href="http://google.com/+espressonews" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/gplus.resized.png', array('absolute'=>true)) . '" border="0" alt="Google Plus" title="Βρείτε μας στο Google Plus" /></a>&nbsp;';
+	$var_socials .= '<a href="http://youtube.com/espressonewsgr" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/youtube.resized.png', array('absolute'=>true)) . '" border="0" alt="YouTube" title="Βρείτε μας στο YouTube" /></a>&nbsp;';
+	$var_socials .= '</span>';
+	
+	//echo $var_body;
+	$content = str_replace("#title#", $var_title, $content);
+	$content = str_replace("#socials#", $var_socials, $content);
+	$content = str_replace("#logourl#", $var_logourl, $content);
+	$content = str_replace("#header_text#", $var_header, $content);
+	$content = str_replace("#body#", $var_body, $content);
+	$content = str_replace("#footer_text#", $var_footer, $content);
+	//$content = str_replace("#photourl#", $basephotourl, $content);
+	
+	
+    return $content;
+}
+
+
+function _cubiconews_preview () {
+	$output = prepNewsletter();
+	
+	echo $output;
+	
+	//return $output;
+}
+
+
+function _cubiconews_finalize () {
+	$newsid = db_insert('cubiconews_newsletters')
+	  ->fields(array(
+	    'title' => 'Newsletter',
+	    'status' => 0,
+	    'created_timestamp' => time(),
+	    //'created' => REQUEST_TIME,
+	  ))
+	  ->execute();
+	
+	$allids = unserialize($_POST['allids_arr']);
+	foreach($allids AS $curkey => $curid) {
+		$num_updated = db_update('cubiconews_nodes')
+			->fields(array(
+					'newsid' => $newsid
+				))
+			->condition('cnid', $curid, '=')
+			->execute();
+	}
+	
+	
+	drupal_set_message(t('The Newsletter is finalized and ready to be send.'), 'status');
+	drupal_goto('cubiconews/newsletters');
+	
+	//return $output;
+}
+
+
+function _cubiconews_removenewsletter () {
+	if(is_numeric(arg(2)) && (arg(1) == 'removenewsletter')) {
+		
+		// Delete the Newsletter from the cubiconews_nodes table
+		db_delete('cubiconews_newsletters')
+			->condition('newsid', arg(2))
+			->execute();
+		
+		$num_updated = db_update('cubiconews_nodes')
+			->fields(array(
+					'newsid' => 0
+				))
+			->condition('newsid', arg(2), '=')
+			->execute();
+	}
+
+	drupal_set_message(t('Newsletter removed. You can find it\'s attached articles when you go to create a new newsletter.'), 'status');
+	drupal_goto('cubiconews/newsletters');
+}
+
+
+/******* MAYBE OBSOLETE *********/
+function _cubiconews_send() {
+	$dcc_max = CUBICONEWS_MAX_DCC;	
+	$from = variable_get('system_mail', 'info@intercube.gr');
+	
+	if(is_numeric(arg(2)) && (arg(1) == 'sendnow')) {
+		$all_emails = db_select('cubiconews_emails', 'cube')
+	        ->fields('cube')
+			->condition('status', 1,'=');
+		$emails_rs = $all_emails->execute();
+		$emails_num = $emails_rs->rowCount();
+		
+		$mail_text = prepNewsletter(arg(2));
+		
+		for($x=0; $x<ceil($emails_num/$dcc_max); $x++) {
+			$batch_emails = db_select('cubiconews_emails', 'cube')
+		        ->fields('cube')
+				->condition('status', 1,'=')
+				->range(($x*$dcc_max),$dcc_max);
+			$batchemails_rs = $batch_emails->execute();
+			
+			$cur_emails = "";
+			while($batchemails_row = $batchemails_rs->fetchAssoc()) {
+				$cur_emails .= $batchemails_row["email"] . ", ";
+			}
+			//echo $cur_emails . '<hr>';
+		
+			$my_module = 'cubiconews';
+		  	$my_mail_token = microtime();
+		
+		 
+			$message = array(
+			  'id' => $my_module . '_' . $my_mail_token,
+			  'key' => $my_mail_token,
+			  'from' => $from,
+			  'to' => $from,
+			  'subject' => "Espressonews.gr - Newsletter-" . date("d/m/Y"),
+			  'body' => array($mail_text),
+			  'headers' => array(
+			    'From' => $from,
+			    'Sender' => $from,
+			    'Return-Path' => $from,
+			    'MIME-Version' => '1.0',
+			    'Content-Type' => 'text/html; charset=UTF-8',
+			    'Content-Transfer-Encoding' => '8Bit',
+     			'X-Mailer' => 'Drupal',
+			    'Bcc' => $cur_emails
+			   )
+			);
+
+			$system = drupal_mail_system('mimemail', $my_mail_token);
+			$message = $system->format($message);
+			$result = $system->mail($message);
+
+			//$system = drupal_mail_system($my_module, $my_mail_token);
+			//$message = $system->format($message);
+			/*
+			if ($result) {
+			  	drupal_set_message(t('Your message has been sent.'), 'status');
+			} else {
+			  	drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
+			}
+			*/
+
+		}
+
+		/*
+		$result = drupal_mail('cubiconews', $key, $to, $language, $params, $from, $send);
+		if ($result['result'] == TRUE) {
+			drupal_set_message(t('Your message has been sent.'));
+		} else {
+			drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
+		}*/
+		
+		
+		
+		$num_updated = db_update('cubiconews_newsletters')
+			->fields(array(
+					'sent_timestamp' => time(),
+					'status' => 1
+					))
+			->condition('newsid', arg(2), '=')
+			->execute();
+		drupal_set_message(t('The newsletter has been sent.'), 'status');
+	}
+	
+	drupal_goto('cubiconews/newsletters');
+}
+
+
+/**
+ * Send the emails using DCC, manually by the newsletters list
+ * As a parameter it gets the newsletter Id it need to be send
+ */
+function _cubiconews_manual_send() {
+	if(is_numeric(arg(2)) && (arg(1) == 'sendnow')) {
+		_cubiconews_cron_bcc_send(arg(2));
+		drupal_set_message(t('The newsletter has been sent.'), 'status');
+	}
+	drupal_goto('cubiconews/newsletters');
+}
+
+
+/**
+ * Send automatically the emails using DCC, using cron
+ * As a parameter it gets the newsletter Id it need to be send
+ */
+function _cubiconews_cron_bcc_send($newsletter_id) {
+	
+	$tpl_path = _get_tpl_path();
+	
+	echo $tpl_path;
+	die();
+  
+	$dcc_max = CUBICONEWS_MAX_DCC;	
+	$from = variable_get('system_mail', 'info@intercube.gr');
+	
+	if($newsletter_id > 0) {
+		$mail_text = prepNewsletter($newsletter_id);		
+		
+		$all_emails = db_select('cubiconews_emails', 'cube')
+	        ->fields('cube')
+			->condition('status', 1,'=');
+		$emails_rs = $all_emails->execute();
+		$emails_num = $emails_rs->rowCount();
+		
+		watchdog('cubiconews', 'Ready to send Newsletter with ID: %newsid to %recnum emails', array('%newsid'=>$newsletter_id, '%recnum' => $emails_num), WATCHDOG_INFO);
+		
+		// Get all the enabled emails to count them
+		for($x=0; $x<ceil($emails_num/$dcc_max); $x++) {
+			$batch_emails = db_select('cubiconews_emails', 'cube')
+		        ->fields('cube')
+				->condition('status', 1,'=')
+				->range(($x*$dcc_max),$dcc_max);
+			$batchemails_rs = $batch_emails->execute();
+			
+			$cur_emails = "";
+			while($batchemails_row = $batchemails_rs->fetchAssoc()) {
+				$cur_emails .= $batchemails_row["email"] . ", ";
+			}
+			watchdog('cubiconews', 'Send to emails %rowemails', array('%rowemails'=>$cur_emails), WATCHDOG_INFO);
+			
+			$my_module = 'cubiconews';
+		  	$my_mail_token = microtime();
+		
+		 
+			$message = array(
+			  'id' => $my_module . '_' . $my_mail_token,
+			  'key' => $my_mail_token,
+			  'from' => $from,
+			  'to' => $from,
+			  'subject' => "Espressonews.gr - Newsletter-" . date("d/m/Y"),
+			  'body' => array($mail_text),
+			  'headers' => array(
+			    'From' => $from,
+			    'Sender' => $from,
+			    'Return-Path' => $from,
+			    'MIME-Version' => '1.0',
+			    'Content-Type' => 'text/html; charset=UTF-8',
+			    'Content-Transfer-Encoding' => '8Bit',
+     			'X-Mailer' => 'Drupal',
+			    'Bcc' => "$cur_emails"
+			   )
+			);
+
+			$system = drupal_mail_system('mimemail', $my_mail_token);
+			$message = $system->format($message);
+			$result = $system->mail($message);
+		}
+		
+		// Set newsletter as sent
+		$num_updated = db_update('cubiconews_newsletters')
+			->fields(array(
+					'sent_timestamp' => time(),
+					'status' => 1
+					))
+			->condition('newsid', $newsletter_id, '=')
+			->execute();
+			
+		watchdog('cubiconews', 'Newsletter sent', array(), WATCHDOG_INFO);
+	} else {
+		watchdog('cubiconews', 'No available Newsletter to auto cron sent', array(), WATCHDOG_INFO);
+	}
+}
+
+
+function _cubiconews_register_ok() {
+	$output = t('Thank you for your registration. From now on you are going to receive our newsletter emails to your inbox.');
+
+	return $output;
+}
+
+
+function _cubiconews_email_remove_ok() {
+	$output = t('We are sorry you decided to not receive our newsletters any more. We hope to reconsider and register back again.');
+	
+	return $output;
+}
+
+
+function _extract_emails($emailtext) {
+	$email = array();
+	$invalid_email = array();
+ 	$pattern = '/[A-Za-z0-9_-]+@[A-Za-z0-9_-]+\.([A-Za-z0-9_-][A-Za-z0-9_]+)/'; //regex for pattern of e-mail address
+   	preg_match_all($pattern, $emailtext, $email); //find matching pattern
+
+	return $email;
+}
+
+function _register_email($newemail) {
+	// Check first if the email already exists in our database
+	$chk_email = db_select('cubiconews_emails', 'cube')
+        ->fields('cube')
+		->condition('email', $newemail,'=')
+		->execute();
+	$emails_num = $chk_email->rowCount();
+	if($emails_num == 0) {
+		$newsid = db_insert('cubiconews_emails')
+		  ->fields(array(
+		    'email' => $newemail,
+		    'status' => 1,
+		    'timestamp' => time(),
+		    //'created' => REQUEST_TIME,
+		  ))
+		  ->execute();
+		$ret = 'new';
+	} else {
+		$enable_email = db_update('cubiconews_emails')
+			->fields(array(
+					'status' => 1,
+		    		'timestamp' => time(),
+				))
+			->condition('email', $newemail, '=')
+			->execute();
+		$ret = 'upd';
+	}
+	return $ret;
+}
+
+function _get_tpl_path() {
+	//echo $newsletter_id . '~~~';
+	print_r($theme_registry);
+	$theme_path = path_to_theme();
+	//$theme_path = drupal_get_filename('theme', 'node--cubiconews_item.tpl');
+	if(file_exists($theme_path . '/node--cubiconews_item.tpl.php') || file_exists($theme_path . '/templates/node--cubiconews_item.tpl.php')) {
+		echo 'file exist';
+	} else {
+		echo 'file does not exist';
+	}
+	
+	echo '~~~' . $theme_path;
+	//$templates = drupal_find_theme_templates($existing, '.tpl.php', $theme_path);
+	//print_r($templates);
+	
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///// Get newsletter articles Functions ///////////////////////////////////////////////////////////////////////////
+
+

@@ -1,0 +1,41 @@
+@todo
+------------------------------------------------
+- Make a theme and a tpl for the Newsletter node
+- Code cleanup
+- Create generic newsletter sending function that will send each single email with the recipient at the TO field
+- Create search and edit of one or more emails. Multiple deletion/disable/enable should be feasible
+- Create the emails manipulation page
+- Add the count of the disabled and enabled emails
+- Create graphic stats where the user can see the change of email registrations/removals
+- Add button to submit to test emails
+- Add Statistics tab at the Cubiconews node pages
+- Add check at the cubiconews_add_node() if the user selected an image field for the specific node type, and get the Image from this field
+- Set up the submition of the newsletters using cron
+- Add the page where the user can add new emails
+- Created generic newsletter sending function, triggered from page or by cron, passing the newsletter ID
+- Disable a newsletter after it was sent
+- Add new newsletter status for automatic sending by cron, so that cron will send only these newsletters. Add a new button "Ready for automatic send".
+- Add new newsletter status for the disabled newsletter.
+- Create the Newsletter preview page
+- Create the transmission functionality
+- Add an image 1x1 for the opening statistics of the newsletter
+- Add specific link on every link in newsletter, that will count the clicks, for statistics
+- Create template functions to get articles, like get_three_first or get_5last
+- At the "cubiconews/registration_remove" check if the email exists and show a different message at the result (optional)
+
+
+
+
+@changelog
+------------------------------------------------
+2015-06-05
+- Make admin page where user selects the supported content types
+- Set in the admin page which image field should be imported per supported content type
+- Added a textarea at the preferences page where the administrator can insert the testing email accounts
+- Add the checks to show the "Add to CubicoNews" link at the node pages, depending the user access and node selection from the CubicoNews preferences
+
+
+2015-06-04
+- Create a new Newsletter if there is none available
+- Create the new content type "CubicoNews Newsletter", based on field collection. Now each newsletter is one single node, and each article is a field collection in it.
+- Add articles in Newsletter from every supported content type node page, using a tab

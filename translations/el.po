@@ -1,0 +1,267 @@
+# $Id: el.po,v 1 2013/03/06 16:08:50 walkero Exp $
+#
+# Greek translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  cubiconews.pages.inc: v 1.0dev 2013/03/06 11:40:50 walkero
+#  cubiconews.module: v 1.0dev 2013/03/06 11:40:50 walkero
+#  cubiconews.info: v 1.0dev 2013/03/06 11:40:50 walkero
+#  cubiconews.install: v 1.0dev 2013/03/06 11:40:50 walkero
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Cubiconews \n"
+"POT-Creation-Date: 2013-03-06 11:33+0200\n"
+"PO-Revision-Date: 2013-03-06 11:33+0200\n"
+"Last-Translator: George Sokianos <walkero@gmail.com>\n"
+"Language-Team: Greek <walkero@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: cubiconews.pages.inc:49
+msgid "Node added to newsletter list"
+msgstr "Το άρθρο προστέθηκε στην λίστα του νέου newsletter"
+
+#: cubiconews.pages.inc:63
+msgid "Manage Cubiconews Newsletters"
+msgstr "Διαχείρηση των Cubiconews Newsletters"
+
+#: cubiconews.pages.inc:65
+msgid "From this page you can see the old newsletters created and create a new one."
+msgstr "Σε αυτή την οθόνη μπορείτε να δείτε όλα τα παλιά newsletters, πότε δημιουργήθηκαν και πότε εστάλησαν."
+
+#: cubiconews.pages.inc:67 cubiconews.module:63
+msgid "Create new newsletter"
+msgstr "Δημιουργία νέου newsletter"
+
+#: cubiconews.pages.inc:72;124
+msgid "num"
+msgstr "Αρ."
+
+#: cubiconews.pages.inc:73;125
+msgid "Title"
+msgstr "Τίτλος"
+
+#: cubiconews.pages.inc:74
+msgid "Created"
+msgstr "Δημιουργήθηκε"
+
+#: cubiconews.pages.inc:75
+msgid "Date sent"
+msgstr "Εστάλη"
+
+#: cubiconews.pages.inc:76;127
+msgid "Actions"
+msgstr "Ενέργειες"
+
+#: cubiconews.pages.inc:100
+msgid "Send"
+msgstr "Αποστολή"
+
+#: cubiconews.pages.inc:101;150
+msgid "Remove"
+msgstr "Αφαίρεση"
+
+#: cubiconews.pages.inc:116
+msgid "Create a new Newsletter"
+msgstr "Δημιουργία ενός νέου newsletter"
+
+#: cubiconews.pages.inc:118
+msgid "At the following list you will see the currently selected articles to add to the newsletter. If you would like some of them to be removed, just click the remove link. You can change their order by the order weight field and by pressing the update button."
+msgstr "Σε αυτή την οθόνη θα βρείτε μια λίστα με τα επιλεγμένα άρθρα που θα συμπεριληφθούν στο νέο newsletter. Μπορείτε να αφαιρέσετε κάποια άρθρα κάνοντας click στο link 'Αφαίρεση'. Μπορείτε να αλλάξετε την σειρά των θεμάτων αλλάζοντας την τιμή βάρους και πατώντας στο κουμπί 'αποθήκευση σειράς'."
+
+#: cubiconews.pages.inc:126
+msgid "Weight"
+msgstr "Βάρος"
+
+#: cubiconews.pages.inc:151
+msgid "Edit"
+msgstr "Επεξεργασία"
+
+#: cubiconews.pages.inc:163
+msgid "update order"
+msgstr "αποθήκευση σειράς"
+
+#: cubiconews.pages.inc:176
+msgid "Preview"
+msgstr "Προεπισκόπιση"
+
+#: cubiconews.pages.inc:177
+msgid "Finalize"
+msgstr "Ολοκλήρωση"
+
+#: cubiconews.module:18
+msgid "Administer Cubiconews"
+msgstr "Διαχείριση του Cubiconews"
+
+#: cubiconews.module:19
+msgid "Perform administrative actions with Cubiconews Newsletter system."
+msgstr ""
+
+#: cubiconews.module:22
+msgid "Create newsletter"
+msgstr ""
+
+#: cubiconews.module:23
+msgid "Allows access to newsletters."
+msgstr ""
+
+#: cubiconews.module:26
+msgid "Administer emails"
+msgstr ""
+
+#: cubiconews.module:27
+msgid "Allow access to the receipients emails."
+msgstr ""
+
+#: cubiconews.module:30
+msgid "Send a newsletter"
+msgstr ""
+
+#: cubiconews.module:31
+msgid "Allow access to send a newsletter to the receipients."
+msgstr ""
+
+#: cubiconews.module:153
+msgid "Succesful subscription"
+msgstr "Επιτυχής εγγραφή"
+
+#: cubiconews.module:162
+msgid "Unsubscribe from our Newsletter"
+msgstr "Διαγραφή από το newsletter μας"
+
+#: cubiconews.module:163
+msgid "Remove your email from our Newsletter receivers"
+msgstr "Αφαιρέστε το email σας από την λίστα παραληπτών του newsletter μας"
+
+#: cubiconews.module:171
+msgid "Succesful subscription removal"
+msgstr ""
+
+#: cubiconews.module:196 cubiconews.info:0
+msgid "Cubiconews"
+msgstr ""
+
+#: cubiconews.module:201
+msgid "Add to Newsletter"
+msgstr "Προσθήκη στο Newsletter"
+
+#: cubiconews.module:229
+msgid "Cubiconews: Visitors register their email"
+msgstr ""
+
+#: cubiconews.module:244
+msgid "Block message"
+msgstr ""
+
+#: cubiconews.module:246
+msgid "This text will appear in the newsletter block."
+msgstr ""
+
+#: cubiconews.module:247;293
+msgid "Insert here your email if you want to receive our Newsletter."
+msgstr "Εισάγετε στο παρακάτω πεδίο το email σας, όπου θα λαμβάνετε το newsletter μας."
+
+#: cubiconews.module:282
+msgid "Newsletter"
+msgstr ""
+
+#: cubiconews.module:297;369
+msgid "Email"
+msgstr ""
+
+#: cubiconews.module:306;378
+msgid "Save"
+msgstr "Αποθήκευση"
+
+#: cubiconews.module:355;391
+msgid "Your email address is not valid."
+msgstr "Η διεύθυνση email που δώσατε δεν είναι σωστή"
+
+#: cubiconews.module:365
+msgid "In case you do not want to receive our newsletters anymore, insert your email at the following field to unsubscribe."
+msgstr "Εάν επιθυμείτε να μην λαμβάνετε πια το newsletter μας, εισάγετε το email σας στο παρακάτω πεδίο για να διαγραφεί από την λίστα μας."
+
+#: cubiconews.module:485;512
+msgid "Read more"
+msgstr "Διαβάστε περισσότερα"
+
+#: cubiconews.module:522
+msgid "If you would like to unsubscribe from our newsletter email list,"
+msgstr "Εάν επιθυμείτε να μην λαμβάνετε πια το newsletter μας,"
+
+#: cubiconews.module:522
+msgid "please click here"
+msgstr "καντε κλικ εδώ"
+
+#: cubiconews.module:568
+msgid "The Newsletter is finalized and ready to be send."
+msgstr "Το νέο newsletter ολοκληρώθηκε και είναι έτοιμο για αποστολή."
+
+#: cubiconews.module:590
+msgid "Newsletter removed. You can find it's attached articles when you go to create a new newsletter."
+msgstr "Το newsletter αφαιρέθηκε. Μπορείτε να βρείτε τα άρθρα του στην λίστα δημιουργίας νέου newletter."
+
+#: cubiconews.module:675
+msgid "The newsletter has been sent."
+msgstr "Το newsletter εστάλη."
+
+#: cubiconews.module:683
+msgid "Thank you for your registration. From now on you are going to receive our newsletter emails to your inbox."
+msgstr "Σας ευχαριστούμε για την εγγραφή σας. Από αυτή την στιγμή θα λαμβάνετε το newsletter μας στο email που έχετε δηλώσει."
+
+#: cubiconews.module:690
+msgid "We are sorry you decided to not receive our newsletters any more. We hope to reconsider and register back again."
+msgstr "Λυπούμαστε που αποφασίσατε να μην λαμβάνετε πια τα newsletter μας. Ελπίζουμε να γραφτείτε ξανά στο μέλλον."
+
+#: cubiconews.module:41
+msgid "CubicoNews"
+msgstr ""
+
+#: cubiconews.module:42
+msgid "Manage Cubiconews Newsletter System."
+msgstr ""
+
+#: cubiconews.module:52
+msgid "Newsletters"
+msgstr ""
+
+#: cubiconews.module:53
+msgid "Manage Cubiconews Newsletters."
+msgstr ""
+
+#: cubiconews.module:64
+msgid "Create new Cubiconews Newsletter."
+msgstr ""
+
+#: cubiconews.module:88
+msgid "Cubiconews add"
+msgstr ""
+
+#: cubiconews.install:339
+msgid "CubicoNews output path"
+msgstr ""
+
+#: cubiconews.install:341
+msgid "Exists"
+msgstr ""
+
+#: cubiconews.install:346
+msgid "The CubicoNews images directory, %path could not be created due to a misconfigured files directory. Please ensure that the files directory is correctly configured and that the webserver has permission to create directories."
+msgstr ""
+
+#: cubiconews.install:348
+msgid "Unable to create"
+msgstr ""
+
+#: cubiconews.info:0
+msgid "Cubiconews newsletter system"
+msgstr ""
+
+#: cubiconews.info:0
+msgid "InterCube"
+msgstr ""
+
