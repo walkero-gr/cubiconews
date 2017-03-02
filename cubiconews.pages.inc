@@ -1,12 +1,12 @@
 <?php
 
-function cubiconews_add_node($node){
+function cubiconews_add_node($sourceNode){
 	// Get the unsent or new newsletters
 	$query = db_select('cubiconews_newsletters', 'cubn')
-	        ->fields('cubn', array('nid'))
-			->condition('status', 0, '=')
-			->orderBy('newsid', 'DESC')
-			->range(0,1);
+    ->fields('cubn', array('nid'))
+    ->condition('status', 0, '=')
+    ->orderBy('nlid', 'DESC')
+    ->range(0,1);
 	$result = $query->execute();
 	$record = $result->fetchAssoc();
 
@@ -36,47 +36,41 @@ function cubiconews_add_node($node){
 
 		$nid = db_insert('cubiconews_newsletters')
 			->fields(array(
-				'title' => 'Newsletter - ' . date('d/m/Y'),
 				'nid' => $newsletter_nid,
 				'status' => 0,
-				'created' => time()
 			))
 			->execute();
 	}
 
 
-
 	// Insert node values into the active Newsletter field collection
 	$entity = entity_create('field_collection_item', array('field_name' => 'field_cubiconews_article_group'));
 
-	$entity->field_cubiconews_article_title[LANGUAGE_NONE][] = array('value' => $node->title);
+	$entity->field_cubiconews_article_title[LANGUAGE_NONE][] = array('value' => $sourceNode->title);
 
-	if(isset($node->body[LANGUAGE_NONE][0]['safe_value']) && ($node->body[LANGUAGE_NONE][0]['safe_value'] != '')) {
-		$entity->field_cubiconews_article_body[LANGUAGE_NONE][] = array('value' => $node->body[LANGUAGE_NONE][0]['safe_value']);
+  if(!empty($sourceNode->body[LANGUAGE_NONE][0]['safe_value'])) {
+		$entity->field_cubiconews_article_body[LANGUAGE_NONE][] = array('value' => $sourceNode->body[LANGUAGE_NONE][0]['safe_value']);
 	}
 
-	if(isset($node->field_image['und'])) {
+	if(isset($sourceNode->field_image['und'])) {
 		$file = (object)array(
 		  "uid" => 1,
-		  "alt" => $node->field_image['und'][0]['alt'],
-	  	  "title" => $node->field_image['und'][0]['title'],
-		  "uri" => $node->field_image['und'][0]['uri'],
-		  "filemime" => file_get_mimetype($node->field_image['und'][0]['uri']),
+		  "alt" => $sourceNode->field_image['und'][0]['alt'],
+	  	"title" => $sourceNode->field_image['und'][0]['title'],
+		  "uri" => $sourceNode->field_image['und'][0]['uri'],
+		  "filemime" => file_get_mimetype($sourceNode->field_image['und'][0]['uri']),
 		  "status" => 1
 		);
 		$file = file_copy($file, 'public://cubiconews', FILE_EXISTS_RENAME);
 		$entity->field_cubiconews_article_image[LANGUAGE_NONE][] = (array)$file;
 	}
-	$entity->field_cubiconews_article_link[LANGUAGE_NONE][] = array('url' => 'node/' . $node->nid);
+	$entity->field_cubiconews_article_link[LANGUAGE_NONE][] = array('url' => 'node/' . $sourceNode->nid);
 
 	$entity->setHostEntity('node', $newsletter_node);
 	$entity->save();
 
-
-
 	drupal_set_message(t('Node added to newsletter list'), 'status');
 	drupal_goto('node/' . $newsletter_nid);
-
 }
 
 
@@ -86,6 +80,8 @@ function _cubiconews_settings(){
 
 }
 
+/*
+OBSOLETE
 function _cubiconews_newsletter_list(){
 	$output = '<h2>' . t('Manage Cubiconews Newsletters') . '</h2>';
 
@@ -152,8 +148,10 @@ function _cubiconews_newsletter_list(){
 	return $output;
 
 }
+*/
 
-
+/*
+OBSOLETE
 function _cubiconews_newsletter_addnew(){
 	$output = '<h2>' . t('Create a new Newsletter') . '</h2>';
 
@@ -176,7 +174,7 @@ function _cubiconews_newsletter_addnew(){
 	$query->join('node', 'n', 'cubn.nid = n.nid');
     $query->fields('n', array('nid', 'title'))
 		->fields('cubn', array('cnid', 'cubnid', 'weight'))
-		->condition('newsid', 0,'=')
+		->condition('nlid', 0,'=')
         ->orderBy('weight', 'ASC');
 	$result = $query->execute();
 	$articles_num = $result->rowCount();
@@ -222,3 +220,4 @@ function _cubiconews_newsletter_addnew(){
 
 	return $output;
 }
+*/

@@ -1,6 +1,6 @@
 <?php
 
-function _cubiconews_admin_preferences_form($form, &$form_submit){
+function _cubiconews_admin_preferences_form($form, &$form_state){
 	$form = array();
 
 	// Add the content type checkboxes
@@ -89,7 +89,7 @@ function _cubiconews_admin_preferences_form_submit ($form, &$form_state){
 
 
 
-function cubiconews_emails_form($form, &$form_submit) {
+function cubiconews_emails_form($form, &$form_state) {
   $form = array();
   $output = '<h1>' . t('Manage Newsletter Recipients') . '</h1>';
 
@@ -218,7 +218,7 @@ function cubiconews_emails_form_submit ($form, &$form_state) {
 }
 
 
-function cubiconews_addemails_form($form, &$form_submit) {
+function cubiconews_addemails_form($form, &$form_state) {
 	$form = array();
 	$form['emails_area'] = array(
 		'#type' => 'textarea',
@@ -266,4 +266,108 @@ function cubiconews_addemails_form_submit ($form, &$form_state) {
 	//watchdog('cubiconews', '%adds emails added! %upds emails updated!', array('%adds' => $add_cnt, '%upds' => $upd_cnt), WATCHDOG_INFO);
 
 	drupal_set_message(t('@adds emails added! @upds emails updated!', array('@adds' =>$add_cnt, '@upds' => $upd_cnt)), 'status');
+}
+
+
+
+function cubiconews_newsletters_form($form, &$form_state) {
+  $form = array();
+  $output = '<h1>' . t('Manage Newsletters') . '</h1>';
+
+  // Build the 'Update options' form.
+  $form['options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Update options'),
+    '#attributes' => array('class' => array('container-inline')),
+    '#access' => user_access('administer cubiconews emails'),
+  );
+  $form['options']['operation'] = array(
+    '#type' => 'select',
+    '#title' => t('Operation'),
+    '#title_display' => 'invisible',
+    '#options' => array(
+      'delete' => 'Remove selected newsletters',
+    ),
+    '#default_value' => 'delete',
+  );
+  $form['options']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update'),
+  );
+
+  $header = array(
+    'title' => array('data' => t('Title'), 'field' => 'n.title'),
+    'status' => array('data' => t('Status'), 'field' => 'cubnl.status'),
+    'created' => array('data' => t('Date Added'), 'field' => 'n.created', 'sort' => 'desc'),
+  );
+
+  $query = db_select('cubiconews_newsletters', 'cubnl')->extend('PagerDefault')->extend('TableSort');
+  $query->fields('n', array('nid', 'title', 'created', 'changed'))
+    ->fields('cubnl', array('status'));
+  $query->join('node', 'n', 'n.nid = cubnl.nid');
+  $query->condition('n.type', 'cubiconews_item', '=')
+    ->condition('n.status', 1, '=')
+    ->limit(50)
+    ->orderByHeader($header);
+
+	$result = $query->execute();
+
+  $languages = language_list();
+  $options = array();
+  while($record = $result->fetchAssoc()) {
+    switch($record['status']) {
+      case -1:
+        $status_text = 'Cancelled';
+        break;
+      case 0:
+        $status_text = 'Unsent / New';
+        break;
+      case 1:
+        $status_text = 'Ready to send';
+        break;
+      case 9:
+        $status_text = 'Sent';
+        break;
+    }
+    $node = node_load($record['nid']);
+    $uri = entity_uri('node', $node);
+    if ($langcode != LANGUAGE_NONE && isset($languages[$langcode])) {
+      $uri['options']['language'] = $languages[$langcode];
+    }
+    $options[$record['nid']] = array(
+      'title' => array(
+        'data' => array(
+          '#type' => 'link',
+          '#title' => $record['title'],
+          '#href' => $uri['path'],
+          '#options' => $uri['options'],
+          '#suffix' => ' ' . theme('mark', array('type' => node_mark($record['nid'], $record['changed']))),
+        ),
+      ),
+      'status' => $status_text,
+      'created' => format_date($record['created'], 'short'),
+    );
+  }
+
+  $form['newsletters'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $options,
+    '#empty' => t('No content available.'),
+  );
+
+  $form['pager'] = array('#markup' => theme('pager'));
+
+  return $form;
+}
+
+function cubiconews_newsletters_form_validate($form, &$form_state) {
+}
+
+function cubiconews_newsletters_form_submit ($form, &$form_state) {
+  switch($form_state['values']['operation']) {
+    case 'delete':
+      node_delete_multiple($form_state['values']['newsletters']);
+      break;
+  }
 }
