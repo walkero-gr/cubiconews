@@ -103,33 +103,87 @@ function cubiconews_emails_form($form, &$form_submit) {
 	$result = $count_emails->execute();
   $emails_num = $result->rowCount();
 
-  if($emails_num > 0) {
-  	while($record = $result->fetchAssoc()) {
-  		print_r($record);
-  		switch($record['status']) {
-  			case 0:
-  				$output .=  '<div class="disabled">' . t('Disabled emails') . ': ' . $record['cnt'] . '</div>';
-  				break;
-  			case 1:
-  				$output .=  '<div class="enabled">' . t('Enabled emails') . ': ' . $record['cnt'] . '</div>';
-  				break;
-  		}
-  	}
-  } else {
-    $output .= t('It seems you run out of recipients!');
-    $output .= t('<br>If you want to import a few emails, please use the "Add Emails" form.');
-  }
-	//$output .=  '<a href="/cubiconews/newsletters/emails/add">' . t('Add new emails') . '</a>';
+  $registered_emails = 0;
+  $cleaned_emails = 0;
+	while($record = $result->fetchAssoc()) {
+		switch($record['status']) {
+			case 0:
+        $cleaned_emails = $record['cnt'];
+				break;
+			case 1:
+        $registered_emails = $record['cnt'];
+				break;
+		}
+	}
+  $output .=  '<div id="email-stats-wrapper">';
+  $output .=  '<div class="enabled email-stats-box">' . $registered_emails . '<br><span class="label">' . t('Registered Emails') . '</span></div>';
+  $output .=  '<div class="disabled email-stats-box">' . $cleaned_emails . '<br><span class="label">' . t('Cleaned Emails') . '</span></div>';
+  $output .=  '</div>';
+
 
   $form['email_list_info'] = array(
     '#markup' => $output,
   );
 
-  // $form['btn_submit'] = array(
-  //   '#type' => 'submit',
-  //   '#value' => t('Import data'),
-  //   '#name' => 'import',
-  // );
+
+  // Build the 'Update options' form.
+  $form['options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Update options'),
+    '#attributes' => array('class' => array('container-inline')),
+    '#access' => user_access('administer cubiconews emails'),
+  );
+  $form['options']['operation'] = array(
+    '#type' => 'select',
+    '#title' => t('Operation'),
+    '#title_display' => 'invisible',
+    '#options' => array(
+      'enable' => 'Enable selected emails',
+      'disable'=> 'Disable selected emails',
+      'delete' => 'Remove selected emails',
+    ),
+    '#default_value' => 'enable',
+  );
+  $form['options']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update'),
+  );
+
+
+  $header = array(
+    'email' => array('data' => t('Email Address'), 'field' => 'cube.email', 'sort' => 'asc'),
+    'name' => array('data' => t('First Name'), 'field' => 'cube.name'),
+    'surname' => array('data' => t('Last Name'), 'field' => 'cube.surname'),
+    'status' => array('data' => t('Status'), 'field' => 'cube.status'),
+    'registration' => array('data' => t('Date Added'), 'field' => 'cube.registration'),
+    //'operations' => array('data' => t('Operations')),
+  );
+
+  $query = db_select('cubiconews_emails', 'cube')->extend('PagerDefault')->extend('TableSort');
+  $query->fields('cube',array('eid', 'name', 'surname', 'email', 'registration', 'status'))
+    ->limit(50)
+    ->orderByHeader($header);
+  $result = $query->execute();
+
+  $options = array();
+  while($record = $result->fetchAssoc()) {
+    $options[$record['eid']] = array(
+      'email' => $record['email'],
+      'name' => $record['name'],
+      'surname' => $record['surname'],
+      'status' => $record['status'] ? t('Subscribed') : t('Cleaned'),
+      'registration' => format_date($record['registration'], 'short'),
+    );
+  }
+
+  $form['emails'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $options,
+    '#empty' => t('No content available.'),
+  );
+
+  $form['pager'] = array('#markup' => theme('pager'));
 
   return $form;
 }
@@ -138,20 +192,45 @@ function cubiconews_emails_form_validate($form, &$form_state) {
 }
 
 function cubiconews_emails_form_submit ($form, &$form_state) {
+  switch($form_state['values']['operation']) {
+    case 'enable':
+      $disable_email = db_update('cubiconews_emails')
+        ->fields(array(
+            'status' => 1
+          ))
+        ->condition('eid', array_values($form_state['values']['emails']), 'IN')
+        ->execute();
+      break;
+    case 'disable':
+      $disable_email = db_update('cubiconews_emails')
+        ->fields(array(
+            'status' => 0
+          ))
+        ->condition('eid', array_values($form_state['values']['emails']), 'IN')
+        ->execute();
+      break;
+    case 'delete':
+      db_delete('cubiconews_emails')
+        ->condition('eid', array_values($form_state['values']['emails']), 'IN')
+        ->execute();
+      break;
+  }
 }
 
 
 function cubiconews_addemails_form($form, &$form_submit) {
 	$form = array();
-	//$form['block_message'] =array(
-	//	'#markup' => t('In case you do not want to receive our newsletters anymore, insert your email at the following field to unsubscribe.'),
-	//);
 	$form['emails_area'] = array(
 		'#type' => 'textarea',
 		'#title' => t('Emails'),
 		'#description' => t('Copy here all the emails you want to import. It doesn\'t matter how the text looks like. The script will recognise the emails and add the new ones in the database. If there are emails that already exist, then these will be enabled again.'),
 		'#default_value' => '',
 		'#required' => true
+	);
+	$form['enable_existing'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Enable existing emails'),
+		'#description' => t('If selected, the existing cleaned emails will be enabled again.'),
 	);
 
 	$form['btn_submit'] = array(
@@ -168,13 +247,15 @@ function cubiconews_addemails_form_validate($form, &$form_state) {
 
 function cubiconews_addemails_form_submit ($form, &$form_state) {
 	$emails_address = $form_state['values']['emails_area'];
-	$extracted_emails = _extract_emails($emails_address);
+  $enable_existing = $form_state['values']['enable_existing'];
+
+	$extracted_emails = _extract_emails($emails_address, $enable_existing);
 
 	$emails = array_unique($extracted_emails[0]);
 	$add_cnt = 0;
 	$upd_cnt = 0;
 	foreach($emails AS $curemail) {
-		$ret = _register_email($curemail);
+		$ret = _register_email($curemail, $enable_existing);
 		if($ret == 'new') { // email added in database
 			$add_cnt++;
 		}
@@ -185,5 +266,4 @@ function cubiconews_addemails_form_submit ($form, &$form_state) {
 	//watchdog('cubiconews', '%adds emails added! %upds emails updated!', array('%adds' => $add_cnt, '%upds' => $upd_cnt), WATCHDOG_INFO);
 
 	drupal_set_message(t('@adds emails added! @upds emails updated!', array('@adds' =>$add_cnt, '@upds' => $upd_cnt)), 'status');
-	//drupal_goto('cubiconews/newsletters/emails');
 }

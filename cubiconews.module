@@ -84,8 +84,8 @@ function cubiconews_menu() {
     'weight' => 3
   );
   $items['admin/config/content/cubiconews/addemails'] = array(
-    'title' => t('Add Emails'),
-    'description' => t('Add new recipients from a list of emails'),
+    'title' => t('Import Emails'),
+    'description' => t('Import new recipients from a list of emails'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('cubiconews_addemails_form'),
     'access callback' => 'user_access',
@@ -1072,7 +1072,7 @@ function _extract_emails($emailtext) {
 	return $email;
 }
 
-function _register_email($newemail) {
+function _register_email($newemail, $enable_existing = true) {
 	// Check first if the email already exists in our database
 	$chk_email = db_select('cubiconews_emails', 'cube')
     ->fields('cube')
@@ -1080,6 +1080,7 @@ function _register_email($newemail) {
 		->execute();
 	$emails_num = $chk_email->rowCount();
 
+  $ret = '';
   if($emails_num == 0) {
 		$newsid = db_insert('cubiconews_emails')
 		  ->fields(array(
@@ -1090,14 +1091,16 @@ function _register_email($newemail) {
 		  ->execute();
 		$ret = 'new';
 	} else {
-		$enable_email = db_update('cubiconews_emails')
-			->fields(array(
-				'status' => 1,
-	    	'registration' => time(),
-			))
-			->condition('email', $newemail, '=')
-			->execute();
-		$ret = 'upd';
+    if($enable_existing) {
+  		$enable_email = db_update('cubiconews_emails')
+  			->fields(array(
+  				'status' => 1,
+  	    	'registration' => time(),
+  			))
+  			->condition('email', $newemail, '=')
+  			->execute();
+      $ret = 'upd';
+    }
 	}
 	return $ret;
 }
