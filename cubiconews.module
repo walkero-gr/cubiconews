@@ -95,6 +95,18 @@ function cubiconews_menu() {
     'file path' => drupal_get_path('module', 'cubiconews'),
     'weight' => 4
   );
+  $items['admin/config/content/cubiconews/removeemails'] = array(
+    'title' => t('Remove Emails'),
+    'description' => t('Remove recipients from the list'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cubiconews_removeemails_form'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer cubiconews emails'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'cubiconews.admin.inc',
+    'file path' => drupal_get_path('module', 'cubiconews'),
+    'weight' => 5
+  );
 
 
 

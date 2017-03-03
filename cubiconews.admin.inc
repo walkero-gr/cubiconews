@@ -1,7 +1,13 @@
 <?php
-
+/**
+ * Config Admin page
+ *
+ */
 function _cubiconews_admin_preferences_form($form, &$form_state){
 	$form = array();
+  $form['page_info'] = array(
+    '#markup' => '<h1>' . t('CubicoNews configuration') . '</h1>'
+  );
 
 	// Add the content type checkboxes
 	$form['cubiconews_config_fs_nodes'] = array(
@@ -86,9 +92,10 @@ function _cubiconews_admin_preferences_form_submit ($form, &$form_state){
 }
 
 
-
-
-
+/**
+ * Manage emails admin page
+ *
+ */
 function cubiconews_emails_form($form, &$form_state) {
   $form = array();
   $output = '<h1>' . t('Manage Newsletter Recipients') . '</h1>';
@@ -121,7 +128,7 @@ function cubiconews_emails_form($form, &$form_state) {
   $output .=  '</div>';
 
 
-  $form['email_list_info'] = array(
+  $form['page_info'] = array(
     '#markup' => $output,
   );
 
@@ -218,8 +225,15 @@ function cubiconews_emails_form_submit ($form, &$form_state) {
 }
 
 
+/**
+ * Import emails admin page
+ *
+ */
 function cubiconews_addemails_form($form, &$form_state) {
 	$form = array();
+  $form['page_info'] = array(
+    '#markup' => '<h1>Import multiple emails</h1>',
+  );
 	$form['emails_area'] = array(
 		'#type' => 'textarea',
 		'#title' => t('Emails'),
@@ -235,7 +249,7 @@ function cubiconews_addemails_form($form, &$form_state) {
 
 	$form['btn_submit'] = array(
 		'#type' => 'submit',
-		'#value' => t('Import'),
+		'#value' => t('Import emails'),
 		'#name' => 'save',
 	);
 
@@ -269,10 +283,15 @@ function cubiconews_addemails_form_submit ($form, &$form_state) {
 }
 
 
-
+/**
+ * Manage newsletters admin page
+ *
+ */
 function cubiconews_newsletters_form($form, &$form_state) {
   $form = array();
-  $output = '<h1>' . t('Manage Newsletters') . '</h1>';
+  $form['page_info'] = array(
+    '#markup' => '<h1>' . t('Manage Newsletters') . '</h1>'
+  );
 
   // Build the 'Update options' form.
   $form['options'] = array(
@@ -370,4 +389,54 @@ function cubiconews_newsletters_form_submit ($form, &$form_state) {
       node_delete_multiple($form_state['values']['newsletters']);
       break;
   }
+}
+
+
+/**
+ * Delete multiple emails admin page
+ *
+ */
+function cubiconews_removeemails_form($form, &$form_state) {
+	$form = array();
+  $form['page_info'] = array(
+    '#markup' => '<h1>Remove multiple emails</h1>',
+  );
+	$form['emails_area'] = array(
+		'#type' => 'textarea',
+		'#title' => t('Emails'),
+		'#description' => t('Copy here all the emails you want to delete from the database. It doesn\'t matter how the text looks like. The script will recognise the emails and remove them.'),
+		'#default_value' => '',
+		'#required' => true
+	);
+	$form['approval'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Are you sure you want to delete these email accounts? This cannot be undone.'),
+		'#required' => true
+	);
+
+	$form['btn_submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Delete emails'),
+		'#name' => 'save',
+	);
+
+	return $form;
+}
+
+function cubiconews_removeemails_form_validate($form, &$form_state) {
+}
+
+function cubiconews_removeemails_form_submit ($form, &$form_state) {
+	$emails_address = $form_state['values']['emails_area'];
+  $enable_existing = $form_state['values']['enable_existing'];
+
+	$extracted_emails = _extract_emails($emails_address, $enable_existing);
+
+	$emails = array_unique($extracted_emails[0]);
+
+  db_delete('cubiconews_emails')
+    ->condition('email', $emails, 'IN')
+    ->execute();
+
+	drupal_set_message(t('@cnt emails deleted from the database!', array('@cnt' => count($emails))), 'status');
 }
