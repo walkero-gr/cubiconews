@@ -527,7 +527,25 @@ function cubiconews_cron() {
 	// watchdog('cubiconews', 'Automatic Cron Executed %crontime. Current time %curtime', array('%crontime'=>$send_timestamp, '%curtime' => $curtimestamp), WATCHDOG_INFO);
 	// }
 }
+function cubiconews_cron_queue_info() {
+  $queues = array();
 
+	$queues['cubiconews_send_emails_queue'] = array(
+    // Queue worker function.
+    'worker callback' => '_cubiconews_send_emails_queue_process',
+    // The function will be work 10 seconds.
+    'time' => 60,
+    'skip on cron' => FALSE
+  );
+
+  return $queues;
+}
+
+function _cubiconews_send_emails_queue_process($data) {
+  $data['update_label'] = 'send_email';
+  _cubiconews_send_email($data['nid'], $data['data']['email']);
+  //_cubiconews_queue_send_emails($data);
+}
 
 /*
  *  hook_node_delete

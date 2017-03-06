@@ -538,10 +538,37 @@ function cubiconews_newsletter_send_form_submit ($form, &$form_state) {
             'schedule' => $schedule_timestamp,
             'status' => 1
           ))
-        ->condition('nid', arg(4), '=')
+        ->condition('nid', $current_nid, '=')
         ->execute();
+        drupal_goto('admin/config/content/cubiconews/newsletters');
       break;
     case 'sendnow':
+      $queue = DrupalQueue::get('cubiconews_send_emails_queue');
+      $queue->createQueue();
+
+      $query = db_select('cubiconews_emails', 'cube');
+      $query->fields('cube',array('eid', 'name', 'surname', 'email', 'status'))
+        ->condition('cube.status', 1, '=');
+      $result = $query->execute();
+      $emails_num = $result->rowCount();
+
+      $options = array();
+      $options['nid'] = $current_nid;
+      while($record = $result->fetchAssoc()) {
+        //krumo($record);
+        $options['data'] = $record;
+        $queue->createItem($options);
+      }
+
+      $num_updated = db_update('cubiconews_newsletters')
+        ->fields(array(
+            'sent' => time(),
+            'status' => 9
+          ))
+        ->condition('nid', $current_nid, '=')
+        ->execute();
+      drupal_set_message(t('Email queued to be send to @cnt emails!', array('@cnt' => $emails_num)), 'status');
+      drupal_goto('admin/config/content/cubiconews/newsletters');
       break;
     case 'sendtest':
       $emails = variable_get('cubiconews_config_test_emails', 'info@intercube.gr');
@@ -553,7 +580,4 @@ function cubiconews_newsletter_send_form_submit ($form, &$form_state) {
       drupal_set_message(t('Test email sent to @cnt emails!', array('@cnt' => count($emails_array))), 'status');
       break;
   }
-
-
-  //die;
 }
