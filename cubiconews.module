@@ -107,6 +107,17 @@ function cubiconews_menu() {
     'file path' => drupal_get_path('module', 'cubiconews'),
     'weight' => 5
   );
+  $items['admin/config/content/cubiconews/%/send'] = array(
+    'title' => t('Send newsletter'),
+    'description' => t('Send or schedule when the newsletter should be send'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cubiconews_newsletter_send_form'),
+    'access callback' => 'user_access',
+    'access arguments' => array('send cubiconews newsletter'),
+    'type' => MENU_CALLBACK,
+    'file' => 'cubiconews.admin.inc',
+    'file path' => drupal_get_path('module', 'cubiconews'),
+  );
 
 
 
@@ -578,7 +589,7 @@ function cubiconews_theme_registry_alter(&$theme_registry) {
   foreach ($template_file_objects as $key => $template_file_object) {
     // If the template has not already been overridden by a theme.
     if (!isset($theme_registry[$key]['theme path']) || !preg_match('#/themes/#', $theme_registry[$key]['theme path'])) {
-      print_r($template_file_object);
+      //krumo($template_file_object);
       // Alter the theme path and template elements.
       $theme_registry[$key]['theme path'] = $module_path;
       $theme_registry[$key] = array_merge($theme_registry[$key], $template_file_object);
@@ -588,228 +599,244 @@ function cubiconews_theme_registry_alter(&$theme_registry) {
 }
 
 
+/**
+ * Processes variables for themes/node--cubiconews_item.tpl.php
+ *
+ * The $variables array contains the following arguments:
+ * - $node
+ * - $view_mode
+ * - $page
+ *
+ * @see themes/node--cubiconews_item.tpl.php
+ */
+//function template_preprocess_cubiconews_item(&$variables) {
+
+//}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Functions ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+// OBSOLETE
+// function remove_item() {
+// 	if(is_numeric(arg(2)) && (arg(1) == 'removeitem')) {
+// 		// Get the CubiconNews item and delete the node
+// 		$query = db_select('cubiconews_nodes', 'cubn')
+// 	        ->fields('cubn', array('cubnid'))
+// 			->condition('cnid', arg(2),'=')
+// 			->range(0,1);
+// 		$result = $query->execute();
+// 		$record = $result->fetchAssoc();
+// 		node_delete($record['cubnid']);
+//
+// 		// Delete the CubiconNews item from the cubiconews_nodes table
+// 		db_delete('cubiconews_nodes')
+// 			->condition('cnid', arg(2))
+// 			->execute();
+// 	}
+//
+// 	drupal_goto('cubiconews/newsletters/add');
+// }
+// OBSOLETE
+// function _update_order() {
+// 	$allids = unserialize($_POST['ids_array']);
+//
+// 	foreach($allids AS $curkey => $curid) {
+// 		$num_updated = db_update('cubiconews_nodes')
+// 			->fields(array(
+// 					'weight' => $_POST['fld-order'][$curkey]
+// 				))
+// 			->condition('cnid', $curid, '=')
+// 			->execute();
+// 	}
+//
+// 	drupal_goto('cubiconews/newsletters/add');
+// }
 
-function remove_item() {
-	if(is_numeric(arg(2)) && (arg(1) == 'removeitem')) {
-		// Get the CubiconNews item and delete the node
-		$query = db_select('cubiconews_nodes', 'cubn')
-	        ->fields('cubn', array('cubnid'))
-			->condition('cnid', arg(2),'=')
-			->range(0,1);
-		$result = $query->execute();
-		$record = $result->fetchAssoc();
-		node_delete($record['cubnid']);
-
-		// Delete the CubiconNews item from the cubiconews_nodes table
-		db_delete('cubiconews_nodes')
-			->condition('cnid', arg(2))
-			->execute();
-	}
-
-	drupal_goto('cubiconews/newsletters/add');
-}
-
-function _update_order() {
-	$allids = unserialize($_POST['ids_array']);
-
-	foreach($allids AS $curkey => $curid) {
-		$num_updated = db_update('cubiconews_nodes')
-			->fields(array(
-					'weight' => $_POST['fld-order'][$curkey]
-				))
-			->condition('cnid', $curid, '=')
-			->execute();
-	}
-
-	drupal_goto('cubiconews/newsletters/add');
-}
-
-
-function prepNewsletter ($cur_newsletter = 0) {
-	$var_title = 'Espressonews Newsletter';
-	$var_logoimg = url('sites/default/files/resize/logo-220x65.png');
-	//<a href="http://www.espressonews.gr" target="_blank"><img src="" alt="Espressonews.gr Newsletter" title="Espressonews.gr Newsletter" border="0"></a>
-	$var_logourl = l('<img src="' . $var_logoimg . '" alt="Espressonews.gr Newsletter" title="Espressonews.gr Newsletter">', '<front>', array('html' => true, 'attributes' => array('target' => '_blank')));
-	$var_header = t(date('l')) . date(', d / m / Y');
-	$bullet_img = url(drupal_get_path('module', 'cubiconews') . "/readmore_bullet.png", array('absolute'=>true));
-
-	// Load template file
-	$tplfile = drupal_get_path('module', 'cubiconews') . "/cubiconews.tpl.php";
-	$fd = fopen($tplfile, "rb");
-    $content = fread($fd, filesize($tplfile));
-    fclose($fd);
-
-	$query = db_select('cubiconews_nodes', 'cubn')
-        ->fields('cubn', array('cubnid', 'nid'))
-		->condition('newsid', $cur_newsletter,'=')
-		->orderBy('weight', 'ASC');
-	$result = $query->execute();
-	$articles_num = $result->rowCount();
-
-	$randnum = time();
-
-	$var_body = '';
-	/*
-	$var_body = '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
-	$var_body .= '<tr>';
-	$var_body .= '<td valign="top" align="center">';
-
-	// NEWSLETTER - 728x90 TOP
-	$var_body .= "<iframe id='a8a78b23' name='a8a78b23' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=54&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='728' height='90'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=a6ae3ab6&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=54&amp;cb=" . $randnum . "&amp;n=a6ae3ab6' border='0' alt='' /></a></iframe>";
-
-	$var_body .= '</td>';
-	$var_body .= '</tr>';
-	$var_body .= '</table>';
-	*/
-
-	$var_body .= '<table cellpadding="5" cellspacing="4" border="0" width="100%">';
-	$var_body .= '<tr>';
-	$var_body .= '<td valign="top" align="left">';
-
-	$var_body .= '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
-	$cnt=0;
-	//while($record = $result->fetchAssoc()) {
-
-	for($i=$cnt; $i<3; $i++) {
-		$record = $result->fetchAssoc();
-		$curnode = node_load($record['cubnid']);
-
-		$var_body .= '<tr>';
-		$var_body .= '<td valign="top" align="right" style="border-bottom: 1px dashed #d7d7d7;">';
-		if(isset($curnode->field_imagethumb['und'][0]['uri'])) {
-			$var_body .= '<img src="' . image_style_url('newsletter_thumb', $curnode->field_imagethumb['und'][0]['uri']) . '" style="border: 6px solid #d7d7d7;">';
-		} else {
-			$var_body .= '<img src="' . url('sites/default/files/cubiconews_logo.jpg', array('absolute'=>true)) . '" width="180" height="70">';
-		}
-		$var_body .= '</td>';
-		$var_body .= '<td valign="top" align="left" style="border-bottom: 1px dashed #d7d7d7;">';
-		$var_body .= '<h3 style="margin: 0px 0px 10px 0px; font-size: 15px; font-family: Arial, Helvetica, sans-serif;">' . $curnode->title . '</h3>';
-		$var_body .= '<div style="font-size: 11px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;">' . $curnode->body['und'][0]['safe_value'] . '</div>';
-		$var_body .= '<div style="font-size: 11px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;"><a href="' . url('node/' . $record['nid'], array('absolute'=>true)) . '" target="_blank" style="color: #ea4526; text-decoration: none;"><img src="' . $bullet_img . '" style="float: left; margin: 3px 5px 0px 0px;">' . t('Read more') . '</a></div>';
-		$var_body .= '</td></tr>';
-		//if($cnt == $articles_num - 6) {
-		//	break;
-		//} else {
-			$cnt++;
-		//}
-	}
-	$var_body .= '</table>';
-
-	$var_body .= '</td>';
-	$var_body .= '<td valign="top" align="left">';
-
-	// NEWSLETTER - 300x250 #1
-	$var_body .= "<iframe id='a698dd53' name='a698dd53' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=56&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='300' height='250'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=a53e9213&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=56&amp;cb=" . $randnum . "&amp;n=a53e9213' border='0' alt='' /></a></iframe>";
-
-	$var_body .= '<br/><br/><a href="http://www.readpoint.com/espresso" target="_blank"><img src="http://www.espressonews.gr/sites/all/themes/framework/images/espresso-epaper.png" border="0"></a>';
-	$var_body .= '</td></tr>';
-	$var_body .= '</table>';
-
-
-	// Show 6 articles as title beside the square ad
-	$var_body .= '<table cellpadding="5" cellspacing="4" border="0" width="100%">';
-	$var_body .= '<tr><td style="margin: 0px 0px 0px 0px; font-size: 17px; font-family: Arial, Helvetica, sans-serif; color: #DD5137; border-bottom: 1px solid #FFB700;">Διαβάστε ακόμα...</td></tr>';
-	$var_body .= '<tr>';
-	$var_body .= '<td valign="top" align="left" style="border-bottom: 1px dashed #d7d7d7;">';
-	$var_body .= '<ul style="margin: 0px;">';
-	for($i=$cnt; $i< $articles_num-3; $i++) {
-		$record = $result->fetchAssoc();
-		$curnode = node_load($record['cubnid']);
-		$var_body .= '<li style="margin: 0px 0px 0px 0px; font-size: 15px; font-family: Arial, Helvetica, sans-serif; color: #DD5137;"><a href="' . url('node/' . $record['nid'], array('absolute'=>true)) . '" target="_blank" style="color: #363636; text-decoration: none;">' . $curnode->title . '</a></li>';
-		//if($cnt == $articles_num - 3) {
-		//	break;
-		//} else {
-			$cnt++;
-		//}
-	}
-	$var_body .= '</ul>';
-	$var_body .= '</td>';
-	$var_body .= '<td width="300" style="border-bottom: 1px dashed #d7d7d7;">';
-
-	// NEWSLETTER - 300x250 #2
-	//$var_body .= "<iframe id='a386a75c' name='a386a75c' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=57&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='300' height='250'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=a99ebe6a&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=57&amp;cb=" . $randnum . "&amp;n=a99ebe6a' border='0' alt='' /></a></iframe>";
-
-	$var_body .= '</td>';
-	$var_body .= '</tr>';
-	$var_body .= '</table>';
-
-
-	// Show the last 3 articles in different cells
-	$var_body .= '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
-	$col_cnt = 1;
-	$var_body .= '<tr>';
-	for($i=$cnt; $i< $articles_num; $i++) {
-		$record = $result->fetchAssoc();
-		$curnode = node_load($record['cubnid']);
-
-		$var_body .= '<td valign="top" align="left" style="' . (($col_cnt < 3) ? 'border-right: 1px solid #ea4526;' : '') . ' padding: 0px 5px;">';
-		$var_body .= '<h3 style="margin: 0px 0px 10px 0px; font-size: 15px; font-family: Arial, Helvetica, sans-serif; color: #ffffff; background-color: #DD5137; padding: 5px; height: 60px; border-bottom: 3px solid #FFB700;">' . $curnode->title . '</h3>';
-
-		$var_body .= '<div style="text-align: center;">';
-		if(isset($curnode->field_imagethumb['und'][0]['uri'])) {
-			$var_body .= '<img src="' . image_style_url('newsletter_thumb', $curnode->field_imagethumb['und'][0]['uri']) . '" style="border: 6px solid #d7d7d7;">';
-		} else {
-			$var_body .= '<img src="' . url('sites/default/files/cubiconews_logo.jpg', array('absolute'=>true)) . '" width="180" height="70">';
-		}
-		$var_body .= '</div>';
-		$var_body .= '<div style="font-size: 11px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;">' . $curnode->body['und'][0]['safe_value'] . '</div>';
-		$var_body .= '<div style="font-size: 12px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif; float: right;"><a href="' . url('node/' . $record['nid'], array('absolute'=>true)) . '" target="_blank" style="color: #ea4526; text-decoration: none;"><img src="' . $bullet_img . '" style="float: left; margin: 3px 5px 0px 0px;">' . t('Read more') . '</a></div>';
-		$var_body .= '</td>';
-		$col_cnt++;
-	}
-	$var_body .= '<tr>';
-	$var_body .= '</table>';
-
-
-	$var_body .= '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
-	$var_body .= '<tr>';
-	$var_body .= '<td valign="top" align="center">';
-
-	// NEWSLETTER - 728x90 Bottom
-	$var_body .= "<iframe id='a8b33dcd' name='a8b33dcd' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=55&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='728' height='90'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=ad72db22&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=55&amp;cb=" . $randnum . "&amp;n=ad72db22' border='0' alt='' /></a></iframe>";
-
-	$var_body .= '</td>';
-	$var_body .= '</tr>';
-	$var_body .= '</table>';
+// OBSOLETE
+// function prepNewsletter ($cur_newsletter = 0) {
+// 	$var_title = 'Espressonews Newsletter';
+// 	$var_logoimg = url('sites/default/files/resize/logo-220x65.png');
+// 	//<a href="http://www.espressonews.gr" target="_blank"><img src="" alt="Espressonews.gr Newsletter" title="Espressonews.gr Newsletter" border="0"></a>
+// 	$var_logourl = l('<img src="' . $var_logoimg . '" alt="Espressonews.gr Newsletter" title="Espressonews.gr Newsletter">', '<front>', array('html' => true, 'attributes' => array('target' => '_blank')));
+// 	$var_header = t(date('l')) . date(', d / m / Y');
+// 	$bullet_img = url(drupal_get_path('module', 'cubiconews') . "/readmore_bullet.png", array('absolute'=>true));
+//
+// 	// Load template file
+// 	$tplfile = drupal_get_path('module', 'cubiconews') . "/cubiconews.tpl.php";
+// 	$fd = fopen($tplfile, "rb");
+//     $content = fread($fd, filesize($tplfile));
+//     fclose($fd);
+//
+// 	$query = db_select('cubiconews_nodes', 'cubn')
+//         ->fields('cubn', array('cubnid', 'nid'))
+// 		->condition('newsid', $cur_newsletter,'=')
+// 		->orderBy('weight', 'ASC');
+// 	$result = $query->execute();
+// 	$articles_num = $result->rowCount();
+//
+// 	$randnum = time();
+//
+// 	$var_body = '';
+// 	/*
+// 	$var_body = '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
+// 	$var_body .= '<tr>';
+// 	$var_body .= '<td valign="top" align="center">';
+//
+// 	// NEWSLETTER - 728x90 TOP
+// 	$var_body .= "<iframe id='a8a78b23' name='a8a78b23' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=54&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='728' height='90'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=a6ae3ab6&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=54&amp;cb=" . $randnum . "&amp;n=a6ae3ab6' border='0' alt='' /></a></iframe>";
+//
+// 	$var_body .= '</td>';
+// 	$var_body .= '</tr>';
+// 	$var_body .= '</table>';
+// 	*/
+//
+// 	$var_body .= '<table cellpadding="5" cellspacing="4" border="0" width="100%">';
+// 	$var_body .= '<tr>';
+// 	$var_body .= '<td valign="top" align="left">';
+//
+// 	$var_body .= '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
+// 	$cnt=0;
+// 	//while($record = $result->fetchAssoc()) {
+//
+// 	for($i=$cnt; $i<3; $i++) {
+// 		$record = $result->fetchAssoc();
+// 		$curnode = node_load($record['cubnid']);
+//
+// 		$var_body .= '<tr>';
+// 		$var_body .= '<td valign="top" align="right" style="border-bottom: 1px dashed #d7d7d7;">';
+// 		if(isset($curnode->field_imagethumb['und'][0]['uri'])) {
+// 			$var_body .= '<img src="' . image_style_url('newsletter_thumb', $curnode->field_imagethumb['und'][0]['uri']) . '" style="border: 6px solid #d7d7d7;">';
+// 		} else {
+// 			$var_body .= '<img src="' . url('sites/default/files/cubiconews_logo.jpg', array('absolute'=>true)) . '" width="180" height="70">';
+// 		}
+// 		$var_body .= '</td>';
+// 		$var_body .= '<td valign="top" align="left" style="border-bottom: 1px dashed #d7d7d7;">';
+// 		$var_body .= '<h3 style="margin: 0px 0px 10px 0px; font-size: 15px; font-family: Arial, Helvetica, sans-serif;">' . $curnode->title . '</h3>';
+// 		$var_body .= '<div style="font-size: 11px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;">' . $curnode->body['und'][0]['safe_value'] . '</div>';
+// 		$var_body .= '<div style="font-size: 11px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;"><a href="' . url('node/' . $record['nid'], array('absolute'=>true)) . '" target="_blank" style="color: #ea4526; text-decoration: none;"><img src="' . $bullet_img . '" style="float: left; margin: 3px 5px 0px 0px;">' . t('Read more') . '</a></div>';
+// 		$var_body .= '</td></tr>';
+// 		//if($cnt == $articles_num - 6) {
+// 		//	break;
+// 		//} else {
+// 			$cnt++;
+// 		//}
+// 	}
+// 	$var_body .= '</table>';
+//
+// 	$var_body .= '</td>';
+// 	$var_body .= '<td valign="top" align="left">';
+//
+// 	// NEWSLETTER - 300x250 #1
+// 	$var_body .= "<iframe id='a698dd53' name='a698dd53' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=56&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='300' height='250'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=a53e9213&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=56&amp;cb=" . $randnum . "&amp;n=a53e9213' border='0' alt='' /></a></iframe>";
+//
+// 	$var_body .= '<br/><br/><a href="http://www.readpoint.com/espresso" target="_blank"><img src="http://www.espressonews.gr/sites/all/themes/framework/images/espresso-epaper.png" border="0"></a>';
+// 	$var_body .= '</td></tr>';
+// 	$var_body .= '</table>';
+//
+//
+// 	// Show 6 articles as title beside the square ad
+// 	$var_body .= '<table cellpadding="5" cellspacing="4" border="0" width="100%">';
+// 	$var_body .= '<tr><td style="margin: 0px 0px 0px 0px; font-size: 17px; font-family: Arial, Helvetica, sans-serif; color: #DD5137; border-bottom: 1px solid #FFB700;">Διαβάστε ακόμα...</td></tr>';
+// 	$var_body .= '<tr>';
+// 	$var_body .= '<td valign="top" align="left" style="border-bottom: 1px dashed #d7d7d7;">';
+// 	$var_body .= '<ul style="margin: 0px;">';
+// 	for($i=$cnt; $i< $articles_num-3; $i++) {
+// 		$record = $result->fetchAssoc();
+// 		$curnode = node_load($record['cubnid']);
+// 		$var_body .= '<li style="margin: 0px 0px 0px 0px; font-size: 15px; font-family: Arial, Helvetica, sans-serif; color: #DD5137;"><a href="' . url('node/' . $record['nid'], array('absolute'=>true)) . '" target="_blank" style="color: #363636; text-decoration: none;">' . $curnode->title . '</a></li>';
+// 		//if($cnt == $articles_num - 3) {
+// 		//	break;
+// 		//} else {
+// 			$cnt++;
+// 		//}
+// 	}
+// 	$var_body .= '</ul>';
+// 	$var_body .= '</td>';
+// 	$var_body .= '<td width="300" style="border-bottom: 1px dashed #d7d7d7;">';
+//
+// 	// NEWSLETTER - 300x250 #2
+// 	//$var_body .= "<iframe id='a386a75c' name='a386a75c' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=57&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='300' height='250'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=a99ebe6a&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=57&amp;cb=" . $randnum . "&amp;n=a99ebe6a' border='0' alt='' /></a></iframe>";
+//
+// 	$var_body .= '</td>';
+// 	$var_body .= '</tr>';
+// 	$var_body .= '</table>';
+//
+//
+// 	// Show the last 3 articles in different cells
+// 	$var_body .= '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
+// 	$col_cnt = 1;
+// 	$var_body .= '<tr>';
+// 	for($i=$cnt; $i< $articles_num; $i++) {
+// 		$record = $result->fetchAssoc();
+// 		$curnode = node_load($record['cubnid']);
+//
+// 		$var_body .= '<td valign="top" align="left" style="' . (($col_cnt < 3) ? 'border-right: 1px solid #ea4526;' : '') . ' padding: 0px 5px;">';
+// 		$var_body .= '<h3 style="margin: 0px 0px 10px 0px; font-size: 15px; font-family: Arial, Helvetica, sans-serif; color: #ffffff; background-color: #DD5137; padding: 5px; height: 60px; border-bottom: 3px solid #FFB700;">' . $curnode->title . '</h3>';
+//
+// 		$var_body .= '<div style="text-align: center;">';
+// 		if(isset($curnode->field_imagethumb['und'][0]['uri'])) {
+// 			$var_body .= '<img src="' . image_style_url('newsletter_thumb', $curnode->field_imagethumb['und'][0]['uri']) . '" style="border: 6px solid #d7d7d7;">';
+// 		} else {
+// 			$var_body .= '<img src="' . url('sites/default/files/cubiconews_logo.jpg', array('absolute'=>true)) . '" width="180" height="70">';
+// 		}
+// 		$var_body .= '</div>';
+// 		$var_body .= '<div style="font-size: 11px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;">' . $curnode->body['und'][0]['safe_value'] . '</div>';
+// 		$var_body .= '<div style="font-size: 12px; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif; float: right;"><a href="' . url('node/' . $record['nid'], array('absolute'=>true)) . '" target="_blank" style="color: #ea4526; text-decoration: none;"><img src="' . $bullet_img . '" style="float: left; margin: 3px 5px 0px 0px;">' . t('Read more') . '</a></div>';
+// 		$var_body .= '</td>';
+// 		$col_cnt++;
+// 	}
+// 	$var_body .= '<tr>';
+// 	$var_body .= '</table>';
+//
+//
+// 	$var_body .= '<table cellpadding="10" cellspacing="4" border="0" width="100%">';
+// 	$var_body .= '<tr>';
+// 	$var_body .= '<td valign="top" align="center">';
+//
+// 	// NEWSLETTER - 728x90 Bottom
+// 	$var_body .= "<iframe id='a8b33dcd' name='a8b33dcd' src='http://adserver.democraticthinktank.gr/www/delivery/afr.php?zoneid=55&amp;cb=" . $randnum . "' frameborder='0' scrolling='no' width='728' height='90'><a href='http://adserver.democraticthinktank.gr/www/delivery/ck.php?n=ad72db22&amp;cb=" . $randnum . "' target='_blank'><img src='http://adserver.democraticthinktank.gr/www/delivery/avw.php?zoneid=55&amp;cb=" . $randnum . "&amp;n=ad72db22' border='0' alt='' /></a></iframe>";
+//
+// 	$var_body .= '</td>';
+// 	$var_body .= '</tr>';
+// 	$var_body .= '</table>';
+//
+//
+// 	$var_footer = '<a href="' . url('node/18', array('absolute'=>true)) . '" target="_blank">Όροι Χρήσης</a> | <a href="' . url('node/19', array('absolute'=>true)) . '" target="_blank">Επικοινωνία</a> | <a href="' . url('node/20', array('absolute'=>true)) . '" target="_blank">Διαφήμιση</a> © 2007-' . date('Y') . ', Espresso';
+// 	$var_footer .= '<p>ΑΠΑΓΟΡΕΥΕΤΑΙ η αναδημοσίευση, η αναπαραγωγή, ολική, μερική ή περιληπτική ή κατά παράφραση ή διασκευή απόδοση του περιεχομένου του παρόντος web site με οποιονδήποτε τρόπο, ηλεκτρονικό, μηχανικό, φωτοτυπικό, ηχογράφησης ή άλλο, χωρίς προηγούμενη γραπτή άδεια του εκδότη.</p>';
+// 	$var_footer .= '<p style="text-align: left;">' . t('If you would like to unsubscribe from our newsletter email list,') . ' <a href="' . url('cubiconews/registration_remove', array('absolute'=>true)) . '">' . t('please click here') . '</a></p>';
+//
+//
+// 	$var_socials = '<span>';
+// 	$var_socials .= '<a href="http://facebook.com/espressonews.gr" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/facebook.resized.png', array('absolute'=>true)) . '" border="0" alt="Facebook" title="Βρείτε μας στο Facebook" /></a>&nbsp;';
+// 	$var_socials .= '<a href="http://twitter.com/espressonews_gr" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/twitter.resized.png', array('absolute'=>true)) . '" border="0" alt="Twitter" title="Βρείτε μας στο Twitter" /></a>&nbsp;';
+// 	$var_socials .= '<a href="http://google.com/+espressonews" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/gplus.resized.png', array('absolute'=>true)) . '" border="0" alt="Google Plus" title="Βρείτε μας στο Google Plus" /></a>&nbsp;';
+// 	$var_socials .= '<a href="http://youtube.com/espressonewsgr" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/youtube.resized.png', array('absolute'=>true)) . '" border="0" alt="YouTube" title="Βρείτε μας στο YouTube" /></a>&nbsp;';
+// 	$var_socials .= '</span>';
+//
+// 	//echo $var_body;
+// 	$content = str_replace("#title#", $var_title, $content);
+// 	$content = str_replace("#socials#", $var_socials, $content);
+// 	$content = str_replace("#logourl#", $var_logourl, $content);
+// 	$content = str_replace("#header_text#", $var_header, $content);
+// 	$content = str_replace("#body#", $var_body, $content);
+// 	$content = str_replace("#footer_text#", $var_footer, $content);
+// 	//$content = str_replace("#photourl#", $basephotourl, $content);
+//
+//
+//     return $content;
+// }
 
 
-	$var_footer = '<a href="' . url('node/18', array('absolute'=>true)) . '" target="_blank">Όροι Χρήσης</a> | <a href="' . url('node/19', array('absolute'=>true)) . '" target="_blank">Επικοινωνία</a> | <a href="' . url('node/20', array('absolute'=>true)) . '" target="_blank">Διαφήμιση</a> © 2007-' . date('Y') . ', Espresso';
-	$var_footer .= '<p>ΑΠΑΓΟΡΕΥΕΤΑΙ η αναδημοσίευση, η αναπαραγωγή, ολική, μερική ή περιληπτική ή κατά παράφραση ή διασκευή απόδοση του περιεχομένου του παρόντος web site με οποιονδήποτε τρόπο, ηλεκτρονικό, μηχανικό, φωτοτυπικό, ηχογράφησης ή άλλο, χωρίς προηγούμενη γραπτή άδεια του εκδότη.</p>';
-	$var_footer .= '<p style="text-align: left;">' . t('If you would like to unsubscribe from our newsletter email list,') . ' <a href="' . url('cubiconews/registration_remove', array('absolute'=>true)) . '">' . t('please click here') . '</a></p>';
-
-
-	$var_socials = '<span>';
-	$var_socials .= '<a href="http://facebook.com/espressonews.gr" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/facebook.resized.png', array('absolute'=>true)) . '" border="0" alt="Facebook" title="Βρείτε μας στο Facebook" /></a>&nbsp;';
-	$var_socials .= '<a href="http://twitter.com/espressonews_gr" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/twitter.resized.png', array('absolute'=>true)) . '" border="0" alt="Twitter" title="Βρείτε μας στο Twitter" /></a>&nbsp;';
-	$var_socials .= '<a href="http://google.com/+espressonews" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/gplus.resized.png', array('absolute'=>true)) . '" border="0" alt="Google Plus" title="Βρείτε μας στο Google Plus" /></a>&nbsp;';
-	$var_socials .= '<a href="http://youtube.com/espressonewsgr" target="_blank"><img src="' . url(drupal_get_path('module', 'cubiconews') . '/youtube.resized.png', array('absolute'=>true)) . '" border="0" alt="YouTube" title="Βρείτε μας στο YouTube" /></a>&nbsp;';
-	$var_socials .= '</span>';
-
-	//echo $var_body;
-	$content = str_replace("#title#", $var_title, $content);
-	$content = str_replace("#socials#", $var_socials, $content);
-	$content = str_replace("#logourl#", $var_logourl, $content);
-	$content = str_replace("#header_text#", $var_header, $content);
-	$content = str_replace("#body#", $var_body, $content);
-	$content = str_replace("#footer_text#", $var_footer, $content);
-	//$content = str_replace("#photourl#", $basephotourl, $content);
-
-
-    return $content;
-}
-
-
+/*
+OBSOLETE
 function _cubiconews_preview () {
+
 	$output = prepNewsletter();
 
 	echo $output;
 
 	//return $output;
 }
-
 
 function _cubiconews_finalize () {
 	$newsid = db_insert('cubiconews_newsletters')
@@ -859,191 +886,192 @@ function _cubiconews_removenewsletter () {
 	drupal_goto('cubiconews/newsletters');
 }
 
+*/
 
 /******* MAYBE OBSOLETE *********/
-function _cubiconews_send() {
-	$dcc_max = CUBICONEWS_MAX_DCC;
-	$from = variable_get('system_mail', 'info@intercube.gr');
-
-	if(is_numeric(arg(2)) && (arg(1) == 'sendnow')) {
-		$all_emails = db_select('cubiconews_emails', 'cube')
-	        ->fields('cube')
-			->condition('status', 1,'=');
-		$emails_rs = $all_emails->execute();
-		$emails_num = $emails_rs->rowCount();
-
-		$mail_text = prepNewsletter(arg(2));
-
-		for($x=0; $x<ceil($emails_num/$dcc_max); $x++) {
-			$batch_emails = db_select('cubiconews_emails', 'cube')
-		        ->fields('cube')
-				->condition('status', 1,'=')
-				->range(($x*$dcc_max),$dcc_max);
-			$batchemails_rs = $batch_emails->execute();
-
-			$cur_emails = "";
-			while($batchemails_row = $batchemails_rs->fetchAssoc()) {
-				$cur_emails .= $batchemails_row["email"] . ", ";
-			}
-			//echo $cur_emails . '<hr>';
-
-			$my_module = 'cubiconews';
-		  	$my_mail_token = microtime();
-
-
-			$message = array(
-			  'id' => $my_module . '_' . $my_mail_token,
-			  'key' => $my_mail_token,
-			  'from' => $from,
-			  'to' => $from,
-			  'subject' => "Espressonews.gr - Newsletter-" . date("d/m/Y"),
-			  'body' => array($mail_text),
-			  'headers' => array(
-			    'From' => $from,
-			    'Sender' => $from,
-			    'Return-Path' => $from,
-			    'MIME-Version' => '1.0',
-			    'Content-Type' => 'text/html; charset=UTF-8',
-			    'Content-Transfer-Encoding' => '8Bit',
-     			'X-Mailer' => 'Drupal',
-			    'Bcc' => $cur_emails
-			   )
-			);
-
-			$system = drupal_mail_system('mimemail', $my_mail_token);
-			$message = $system->format($message);
-			$result = $system->mail($message);
-
-			//$system = drupal_mail_system($my_module, $my_mail_token);
-			//$message = $system->format($message);
-			/*
-			if ($result) {
-			  	drupal_set_message(t('Your message has been sent.'), 'status');
-			} else {
-			  	drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
-			}
-			*/
-
-		}
-
-		/*
-		$result = drupal_mail('cubiconews', $key, $to, $language, $params, $from, $send);
-		if ($result['result'] == TRUE) {
-			drupal_set_message(t('Your message has been sent.'));
-		} else {
-			drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
-		}*/
-
-
-
-		$num_updated = db_update('cubiconews_newsletters')
-			->fields(array(
-					'sent_timestamp' => time(),
-					'status' => 1
-					))
-			->condition('newsid', arg(2), '=')
-			->execute();
-		drupal_set_message(t('The newsletter has been sent.'), 'status');
-	}
-
-	drupal_goto('cubiconews/newsletters');
-}
+// function _cubiconews_send() {
+// 	$dcc_max = CUBICONEWS_MAX_DCC;
+// 	$from = variable_get('system_mail', 'info@intercube.gr');
+//
+// 	if(is_numeric(arg(2)) && (arg(1) == 'sendnow')) {
+// 		$all_emails = db_select('cubiconews_emails', 'cube')
+// 	        ->fields('cube')
+// 			->condition('status', 1,'=');
+// 		$emails_rs = $all_emails->execute();
+// 		$emails_num = $emails_rs->rowCount();
+//
+// 		$mail_text = prepNewsletter(arg(2));
+//
+// 		for($x=0; $x<ceil($emails_num/$dcc_max); $x++) {
+// 			$batch_emails = db_select('cubiconews_emails', 'cube')
+// 		        ->fields('cube')
+// 				->condition('status', 1,'=')
+// 				->range(($x*$dcc_max),$dcc_max);
+// 			$batchemails_rs = $batch_emails->execute();
+//
+// 			$cur_emails = "";
+// 			while($batchemails_row = $batchemails_rs->fetchAssoc()) {
+// 				$cur_emails .= $batchemails_row["email"] . ", ";
+// 			}
+// 			//echo $cur_emails . '<hr>';
+//
+// 			$my_module = 'cubiconews';
+// 		  	$my_mail_token = microtime();
+//
+//
+// 			$message = array(
+// 			  'id' => $my_module . '_' . $my_mail_token,
+// 			  'key' => $my_mail_token,
+// 			  'from' => $from,
+// 			  'to' => $from,
+// 			  'subject' => "Espressonews.gr - Newsletter-" . date("d/m/Y"),
+// 			  'body' => array($mail_text),
+// 			  'headers' => array(
+// 			    'From' => $from,
+// 			    'Sender' => $from,
+// 			    'Return-Path' => $from,
+// 			    'MIME-Version' => '1.0',
+// 			    'Content-Type' => 'text/html; charset=UTF-8',
+// 			    'Content-Transfer-Encoding' => '8Bit',
+//      			'X-Mailer' => 'Drupal',
+// 			    'Bcc' => $cur_emails
+// 			   )
+// 			);
+//
+// 			$system = drupal_mail_system('mimemail', $my_mail_token);
+// 			$message = $system->format($message);
+// 			$result = $system->mail($message);
+//
+// 			//$system = drupal_mail_system($my_module, $my_mail_token);
+// 			//$message = $system->format($message);
+// 			/*
+// 			if ($result) {
+// 			  	drupal_set_message(t('Your message has been sent.'), 'status');
+// 			} else {
+// 			  	drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
+// 			}
+// 			*/
+//
+// 		}
+//
+// 		/*
+// 		$result = drupal_mail('cubiconews', $key, $to, $language, $params, $from, $send);
+// 		if ($result['result'] == TRUE) {
+// 			drupal_set_message(t('Your message has been sent.'));
+// 		} else {
+// 			drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
+// 		}*/
+//
+//
+//
+// 		$num_updated = db_update('cubiconews_newsletters')
+// 			->fields(array(
+// 					'sent_timestamp' => time(),
+// 					'status' => 1
+// 					))
+// 			->condition('newsid', arg(2), '=')
+// 			->execute();
+// 		drupal_set_message(t('The newsletter has been sent.'), 'status');
+// 	}
+//
+// 	drupal_goto('cubiconews/newsletters');
+// }
 
 
 /**
  * Send the emails using DCC, manually by the newsletters list
  * As a parameter it gets the newsletter Id it need to be send
  */
-function _cubiconews_manual_send() {
-	if(is_numeric(arg(2)) && (arg(1) == 'sendnow')) {
-		_cubiconews_cron_bcc_send(arg(2));
-		drupal_set_message(t('The newsletter has been sent.'), 'status');
-	}
-	drupal_goto('cubiconews/newsletters');
-}
+// function _cubiconews_manual_send() {
+// 	if(is_numeric(arg(2)) && (arg(1) == 'sendnow')) {
+// 		_cubiconews_cron_bcc_send(arg(2));
+// 		drupal_set_message(t('The newsletter has been sent.'), 'status');
+// 	}
+// 	drupal_goto('cubiconews/newsletters');
+// }
 
 
 /**
  * Send automatically the emails using DCC, using cron
  * As a parameter it gets the newsletter Id it need to be send
  */
-function _cubiconews_cron_bcc_send($newsletter_id) {
-
-	$tpl_path = _get_tpl_path();
-
-	echo $tpl_path;
-	die();
-
-	$dcc_max = CUBICONEWS_MAX_DCC;
-	$from = variable_get('system_mail', 'info@intercube.gr');
-
-	if($newsletter_id > 0) {
-		$mail_text = prepNewsletter($newsletter_id);
-
-		$all_emails = db_select('cubiconews_emails', 'cube')
-	        ->fields('cube')
-			->condition('status', 1,'=');
-		$emails_rs = $all_emails->execute();
-		$emails_num = $emails_rs->rowCount();
-
-		watchdog('cubiconews', 'Ready to send Newsletter with ID: %newsid to %recnum emails', array('%newsid'=>$newsletter_id, '%recnum' => $emails_num), WATCHDOG_INFO);
-
-		// Get all the enabled emails to count them
-		for($x=0; $x<ceil($emails_num/$dcc_max); $x++) {
-			$batch_emails = db_select('cubiconews_emails', 'cube')
-		        ->fields('cube')
-				->condition('status', 1,'=')
-				->range(($x*$dcc_max),$dcc_max);
-			$batchemails_rs = $batch_emails->execute();
-
-			$cur_emails = "";
-			while($batchemails_row = $batchemails_rs->fetchAssoc()) {
-				$cur_emails .= $batchemails_row["email"] . ", ";
-			}
-			watchdog('cubiconews', 'Send to emails %rowemails', array('%rowemails'=>$cur_emails), WATCHDOG_INFO);
-
-			$my_module = 'cubiconews';
-		  	$my_mail_token = microtime();
-
-
-			$message = array(
-			  'id' => $my_module . '_' . $my_mail_token,
-			  'key' => $my_mail_token,
-			  'from' => $from,
-			  'to' => $from,
-			  'subject' => "Espressonews.gr - Newsletter-" . date("d/m/Y"),
-			  'body' => array($mail_text),
-			  'headers' => array(
-			    'From' => $from,
-			    'Sender' => $from,
-			    'Return-Path' => $from,
-			    'MIME-Version' => '1.0',
-			    'Content-Type' => 'text/html; charset=UTF-8',
-			    'Content-Transfer-Encoding' => '8Bit',
-     			'X-Mailer' => 'Drupal',
-			    'Bcc' => "$cur_emails"
-			   )
-			);
-
-			$system = drupal_mail_system('mimemail', $my_mail_token);
-			$message = $system->format($message);
-			$result = $system->mail($message);
-		}
-
-		// Set newsletter as sent
-		$num_updated = db_update('cubiconews_newsletters')
-			->fields(array(
-					'sent_timestamp' => time(),
-					'status' => 1
-					))
-			->condition('newsid', $newsletter_id, '=')
-			->execute();
-
-		watchdog('cubiconews', 'Newsletter sent', array(), WATCHDOG_INFO);
-	} else {
-		watchdog('cubiconews', 'No available Newsletter to auto cron sent', array(), WATCHDOG_INFO);
-	}
-}
+// function _cubiconews_cron_bcc_send($newsletter_id) {
+//
+// 	$tpl_path = _get_tpl_path();
+//
+// 	echo $tpl_path;
+// 	die();
+//
+// 	$dcc_max = CUBICONEWS_MAX_DCC;
+// 	$from = variable_get('system_mail', 'info@intercube.gr');
+//
+// 	if($newsletter_id > 0) {
+// 		$mail_text = prepNewsletter($newsletter_id);
+//
+// 		$all_emails = db_select('cubiconews_emails', 'cube')
+// 	        ->fields('cube')
+// 			->condition('status', 1,'=');
+// 		$emails_rs = $all_emails->execute();
+// 		$emails_num = $emails_rs->rowCount();
+//
+// 		watchdog('cubiconews', 'Ready to send Newsletter with ID: %newsid to %recnum emails', array('%newsid'=>$newsletter_id, '%recnum' => $emails_num), WATCHDOG_INFO);
+//
+// 		// Get all the enabled emails to count them
+// 		for($x=0; $x<ceil($emails_num/$dcc_max); $x++) {
+// 			$batch_emails = db_select('cubiconews_emails', 'cube')
+// 		        ->fields('cube')
+// 				->condition('status', 1,'=')
+// 				->range(($x*$dcc_max),$dcc_max);
+// 			$batchemails_rs = $batch_emails->execute();
+//
+// 			$cur_emails = "";
+// 			while($batchemails_row = $batchemails_rs->fetchAssoc()) {
+// 				$cur_emails .= $batchemails_row["email"] . ", ";
+// 			}
+// 			watchdog('cubiconews', 'Send to emails %rowemails', array('%rowemails'=>$cur_emails), WATCHDOG_INFO);
+//
+// 			$my_module = 'cubiconews';
+// 		  	$my_mail_token = microtime();
+//
+//
+// 			$message = array(
+// 			  'id' => $my_module . '_' . $my_mail_token,
+// 			  'key' => $my_mail_token,
+// 			  'from' => $from,
+// 			  'to' => $from,
+// 			  'subject' => "Espressonews.gr - Newsletter-" . date("d/m/Y"),
+// 			  'body' => array($mail_text),
+// 			  'headers' => array(
+// 			    'From' => $from,
+// 			    'Sender' => $from,
+// 			    'Return-Path' => $from,
+// 			    'MIME-Version' => '1.0',
+// 			    'Content-Type' => 'text/html; charset=UTF-8',
+// 			    'Content-Transfer-Encoding' => '8Bit',
+//      			'X-Mailer' => 'Drupal',
+// 			    'Bcc' => "$cur_emails"
+// 			   )
+// 			);
+//
+// 			$system = drupal_mail_system('mimemail', $my_mail_token);
+// 			$message = $system->format($message);
+// 			$result = $system->mail($message);
+// 		}
+//
+// 		// Set newsletter as sent
+// 		$num_updated = db_update('cubiconews_newsletters')
+// 			->fields(array(
+// 					'sent_timestamp' => time(),
+// 					'status' => 1
+// 					))
+// 			->condition('newsid', $newsletter_id, '=')
+// 			->execute();
+//
+// 		watchdog('cubiconews', 'Newsletter sent', array(), WATCHDOG_INFO);
+// 	} else {
+// 		watchdog('cubiconews', 'No available Newsletter to auto cron sent', array(), WATCHDOG_INFO);
+// 	}
+// }
 
 
 function _cubiconews_register_ok() {
@@ -1117,6 +1145,46 @@ function _get_tpl_path() {
 	//$templates = drupal_find_theme_templates($existing, '.tpl.php', $theme_path);
 	//print_r($templates);
 
+}
+
+
+function _cubiconews_send_email($nid, $recipient_mail) {
+  $node = node_load($nid);
+	$from = variable_get('system_mail', 'info@intercube.gr');
+
+  $mail_text = '';
+  $my_module = 'cubiconews';
+  $my_mail_token = microtime();
+  $module_path = drupal_get_path('module', 'cubiconews');
+  $template_path = $module_path . '/themes/node--cubiconews_item.tpl.php';
+
+  // Include the tpl in buffer
+  ob_start();
+  include($template_path);
+  $mail_text .= ob_get_contents();
+  ob_end_clean();
+
+  $message = array(
+    'id' => $my_module . '_' . $my_mail_token,
+    'key' => $my_mail_token,
+    'from' => $from,
+    'to' => $recipient_mail,
+    'subject' => $node->title,
+    'body' => array($mail_text),
+    'headers' => array(
+      'From' => $from,
+      'Sender' => $from,
+      'Return-Path' => $from,
+      'MIME-Version' => '1.0',
+      'Content-Type' => 'text/html; charset=UTF-8',
+      'Content-Transfer-Encoding' => '8Bit',
+  		'X-Mailer' => 'Drupal'
+    )
+  );
+
+  $system = drupal_mail_system('mimemail', $my_mail_token);
+  $message = $system->format($message);
+  $result = $system->mail($message);
 }
 
 

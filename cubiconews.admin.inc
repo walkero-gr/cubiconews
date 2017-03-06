@@ -263,7 +263,7 @@ function cubiconews_addemails_form_submit ($form, &$form_state) {
 	$emails_address = $form_state['values']['emails_area'];
   $enable_existing = $form_state['values']['enable_existing'];
 
-	$extracted_emails = _extract_emails($emails_address, $enable_existing);
+	$extracted_emails = _extract_emails($emails_address);
 
 	$emails = array_unique($extracted_emails[0]);
 	$add_cnt = 0;
@@ -318,11 +318,14 @@ function cubiconews_newsletters_form($form, &$form_state) {
     'title' => array('data' => t('Title'), 'field' => 'n.title'),
     'status' => array('data' => t('Status'), 'field' => 'cubnl.status'),
     'created' => array('data' => t('Date Added'), 'field' => 'n.created', 'sort' => 'desc'),
+    'sent' => array('data' => t('Date Sent'), 'field' => 'cubnl.sent'),
+    'schedule' => array('data' => t('Scheduled'), 'field' => 'cubnl.schedule'),
+    'operations' => array('data' => t('Operations')),
   );
 
   $query = db_select('cubiconews_newsletters', 'cubnl')->extend('PagerDefault')->extend('TableSort');
   $query->fields('n', array('nid', 'title', 'created', 'changed'))
-    ->fields('cubnl', array('status'));
+    ->fields('cubnl', array('status', 'sent', 'schedule'));
   $query->join('node', 'n', 'n.nid = cubnl.nid');
   $query->condition('n.type', 'cubiconews_item', '=')
     ->condition('n.status', 1, '=')
@@ -342,13 +345,14 @@ function cubiconews_newsletters_form($form, &$form_state) {
         $status_text = 'Unsent / New';
         break;
       case 1:
-        $status_text = 'Ready to send';
+        $status_text = 'Scheduled';
         break;
       case 9:
         $status_text = 'Sent';
         break;
     }
     $node = node_load($record['nid']);
+    $langcode = entity_language('node', $node);
     $uri = entity_uri('node', $node);
     if ($langcode != LANGUAGE_NONE && isset($languages[$langcode])) {
       $uri['options']['language'] = $languages[$langcode];
@@ -365,6 +369,17 @@ function cubiconews_newsletters_form($form, &$form_state) {
       ),
       'status' => $status_text,
       'created' => format_date($record['created'], 'short'),
+      'sent' => ((!empty($record['sent'])) ? format_date($record['sent'], 'short') : '-'),
+      'schedule' => ((!empty($record['schedule'])) ? format_date($record['schedule'], 'short') : '-'),
+      'operations' => array(
+        'data' => array(
+          '#type' => 'link',
+          '#title' => t('Send newsletter'),
+          '#href' => 'admin/config/content/cubiconews/' . $record['nid'] . '/send',
+          //'#options' => $uri['options'],
+          //'#suffix' => ' ' . theme('mark', array('type' => node_mark($record['nid'], $record['changed']))),
+        ),
+      ),
     );
   }
 
@@ -430,7 +445,7 @@ function cubiconews_removeemails_form_submit ($form, &$form_state) {
 	$emails_address = $form_state['values']['emails_area'];
   $enable_existing = $form_state['values']['enable_existing'];
 
-	$extracted_emails = _extract_emails($emails_address, $enable_existing);
+	$extracted_emails = _extract_emails($emails_address);
 
 	$emails = array_unique($extracted_emails[0]);
 
@@ -439,4 +454,106 @@ function cubiconews_removeemails_form_submit ($form, &$form_state) {
     ->execute();
 
 	drupal_set_message(t('@cnt emails deleted from the database!', array('@cnt' => count($emails))), 'status');
+}
+
+
+/**
+ * Sent newsletter admin page
+ *
+ */
+function cubiconews_newsletter_send_form($form, &$form_state) {
+	$form = array();
+  $form['page_info'] = array(
+    '#markup' => '<h1>Send newsletter</h1>',
+  );
+
+
+	$form['schedule_checkbox'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Schedule to send the newsletter later.'),
+	);
+  $form['schedule_date'] = array(
+    '#type' => 'date_popup',
+    '#title' => t('Schedule Date & Time'),
+    '#date_format' => 'Y-m-d H:i',
+    '#date_year_range' => '0:1',
+		'#datepicker_options' => array(
+      'minDate' => date('Y-m-d H:i'),
+      'maxDate' => date('Y-m-d H:i', strtotime('today +1 month midnight'))
+    ),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="schedule_checkbox"]' => array("checked" => TRUE)
+      ),
+      'required' => array(
+        ':input[name="schedule_checkbox"]' => array("checked" => TRUE)
+      )
+    )
+  );
+
+  $form['btn_sendtest'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send test email'),
+    '#name' => 'sendtest',
+  );
+	$form['btn_schedule'] = array(
+		'#type' => 'submit',
+		'#value' => t('Schedule'),
+		'#name' => 'schedule',
+    '#states' => array('visible' => array(':input[name="schedule_checkbox"]' => array("checked" => TRUE))),
+	);
+	$form['btn_sendnow'] = array(
+		'#type' => 'submit',
+		'#value' => t('Send now'),
+		'#name' => 'sendnow',
+    '#states' => array('visible' => array(':input[name="schedule_checkbox"]' => array("checked" => false))),
+	);
+
+	return $form;
+}
+
+function cubiconews_newsletter_send_form_validate($form, &$form_state) {
+
+  switch($form_state['clicked_button']['#name']) {
+    case 'schedule':
+      if(empty($form_state['values']['schedule_date'])) {
+		    form_set_error('schedule_date', t('If you want to schedule the sending of the newsletter you need to set date and time'));
+      }
+      break;
+    case 'sendnow':
+      break;
+    case 'sendtest':
+      break;
+  }
+}
+
+function cubiconews_newsletter_send_form_submit ($form, &$form_state) {
+  $current_nid = arg(4);
+
+  switch($form_state['clicked_button']['#name']) {
+    case 'schedule':
+      $schedule_timestamp = strtotime($form_state['values']['schedule_date']);
+      $num_updated = db_update('cubiconews_newsletters')
+        ->fields(array(
+            'schedule' => $schedule_timestamp,
+            'status' => 1
+          ))
+        ->condition('nid', arg(4), '=')
+        ->execute();
+      break;
+    case 'sendnow':
+      break;
+    case 'sendtest':
+      $emails = variable_get('cubiconews_config_test_emails', 'info@intercube.gr');
+      $emails_array = _extract_emails($emails);
+
+      foreach($emails_array[0] AS $recipient_email) {
+        _cubiconews_send_email($current_nid, $recipient_email);
+      }
+      drupal_set_message(t('Test email sent to @cnt emails!', array('@cnt' => count($emails_array))), 'status');
+      break;
+  }
+
+
+  //die;
 }

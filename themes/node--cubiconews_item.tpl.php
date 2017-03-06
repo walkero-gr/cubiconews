@@ -1,5 +1,5 @@
 <?php
-$var_logoimg = url('themes/bartik/logo.png');
+$var_logoimg = url('themes/bartik/logo.png', array('absolute' => true));
 $var_logourl = l('<img src="' . $var_logoimg . '" alt="Espressonews.gr Newsletter" title="Espressonews.gr Newsletter">', '<front>', array('html' => true, 'attributes' => array('target' => '_blank')));
 ?>
 
@@ -27,11 +27,11 @@ $var_logourl = l('<img src="' . $var_logoimg . '" alt="Espressonews.gr Newslette
 	<tr>
 	  <td colspan="2" style="padding: 5px;" valign="top" class="defaultFont">
 		<?php
-		
+
 		$field_collection_fields = field_get_items('node', $node, 'field_cubiconews_article_group');
 		foreach ($field_collection_fields as $field_collection_field) {
 		  $field_collection_item = field_collection_item_load($field_collection_field['value']);
-		  
+
 		  $field_wrapper = entity_metadata_wrapper('field_collection_item', $field_collection_item);
 		?>
 		<p>
@@ -42,17 +42,17 @@ $var_logourl = l('<img src="' . $var_logoimg . '" alt="Espressonews.gr Newslette
 				<?php echo l(t('Read more'), $field_wrapper->field_cubiconews_article_link->value()['display_url']); ?>
 			</p>
 		</p>
-		<?php 
+		<?php
 		} ?>
-		
+
 	  </td>
 	</tr>
 	<tr>
 	  <td colspan="2" style="padding: 15px 5px; border-top: 3px solid #EA4526; color: black; font-size: 10px; height: 60px; font-family: Arial, Helvetica, sans-serif;">
-		<a href="<?php echo url('node/18', array('absolute'=>true)); ?>" target="_blank">Όροι Χρήσης</a> | <a href="<?php echo url('node/19', array('absolute'=>true)); ?>" target="_blank">Επικοινωνία</a> | <a href="<?php echo url('node/20', array('absolute'=>true)); ?>" target="_blank">Διαφήμιση</a> © 2007-<?php echo date('Y'); ?>, Espresso 
+		<a href="<?php echo url('node/18', array('absolute'=>true)); ?>" target="_blank">Όροι Χρήσης</a> | <a href="<?php echo url('node/19', array('absolute'=>true)); ?>" target="_blank">Επικοινωνία</a> | <a href="<?php echo url('node/20', array('absolute'=>true)); ?>" target="_blank">Διαφήμιση</a> © 2007-<?php echo date('Y'); ?>, Espresso
 		<p>ΑΠΑΓΟΡΕΥΕΤΑΙ η αναδημοσίευση, η αναπαραγωγή, ολική, μερική ή περιληπτική ή κατά παράφραση ή διασκευή απόδοση του περιεχομένου του παρόντος web site με οποιονδήποτε τρόπο, ηλεκτρονικό, μηχανικό, φωτοτυπικό, ηχογράφησης ή άλλο, χωρίς προηγούμενη γραπτή άδεια του εκδότη.</p>
-		<p style="text-align: left;"><?php echo t('If you would like to unsubscribe from our newsletter email list,'); ?> <a href="<?php echo url('cubiconews/registration_remove', array('absolute'=>true)); ?>"><?php echo t('please click here'); ?></a></p>
-	  
+		<p style="text-align: left;"><?php echo t('If you would like to unsubscribe from our newsletter email list,'); ?> <a href="<?php echo url('cubiconews/unregister', array('absolute'=>true)); ?>"><?php echo t('please click here'); ?></a></p>
+
 	  </td>
 	</tr>
 	<tr>
@@ -72,7 +72,7 @@ echo '<hr>';
     $field_collection_fields = field_get_items('node', $node, 'field_cubiconews_article_group');
 	foreach ($field_collection_fields as $field_collection_field) {
 	  $field_collection_item = field_collection_item_load($field_collection_field['value']);
-	  
+
 	  $field_wrapper = entity_metadata_wrapper('field_collection_item', $field_collection_item);
 	  echo $field_wrapper->field_cubiconews_article_title->value();
 	}

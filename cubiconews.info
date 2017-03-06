@@ -17,5 +17,6 @@ files[] = cubiconews.tpl.inc
 dependencies[] = mimemail
 dependencies[] = field_collection
 dependencies[] = link
+dependencies[] = date_popup
 
 scripts[] = cubiconews.js
