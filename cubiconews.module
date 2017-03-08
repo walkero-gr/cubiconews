@@ -147,7 +147,6 @@ function cubiconews_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK
   );
-
   $items['node/%node/cubiconews_add'] = array(
     'page callback' => 'cubiconews_add_node',
     'page arguments' => array(1),
@@ -161,6 +160,11 @@ function cubiconews_menu() {
     'type' => MENU_LOCAL_TASK,
     //'type' => MENU_LOCAL_ACTION,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
+  $items['newsletter/%'] = array(
+    'title' =>  t('Newsletter'),
+    'page callback' => '_cubiconews_headless_newsletter',
+    'access callback' => true
   );
 
 
@@ -614,6 +618,61 @@ function cubiconews_theme_registry_alter(&$theme_registry) {
       $theme_registry[$key]['type'] = 'module';
     }
   }
+}
+
+
+function _cubiconews_headless_newsletter() {
+  $nid = arg(1);
+  $mail_text = _cubiconews_newsletter_prepare($nid);
+  echo $mail_text;
+  exit;
+}
+
+
+
+function _cubiconews_newsletter_prepare($nid) {
+  $node = node_load($nid);
+  $module_path = drupal_get_path('module', 'cubiconews');
+  $template_path = $module_path . '/themes/';
+
+  global $base_url;
+  if(!empty($base_url)) {
+    $base_link_url = $base_url;
+  } else {
+    $base_link_url = 'http://localhost:8060';
+  }
+  $newsletter['logo_img_url'] = url('themes/bartik/logo.png', array('absolute' => true, 'base_url' => $base_link_url));
+  //$var_logourl = l('<img src="' . $var_logoimg . '" alt="Espressonews.gr Newsletter" title="Espressonews.gr Newsletter">', '<front>', array('html' => true, 'attributes' => array('target' => '_blank')));
+
+  $newsletter['title'] = $node->title;
+  $newsletter['url'] = $base_link_url . '/newsletter/' . $nid;
+
+  $articles = array();
+  $field_collection_fields = field_get_items('node', $node, 'field_cubiconews_article_group');
+  foreach ($field_collection_fields as $field_collection_field) {
+    $artc = array();
+
+    $field_collection_item = field_collection_item_load($field_collection_field['value']);
+
+    $field_wrapper = entity_metadata_wrapper('field_collection_item', $field_collection_item);
+    $artc['title'] = $field_wrapper->field_cubiconews_article_title->value();
+    $image_data = $field_wrapper->field_cubiconews_article_image->value();
+    $images_style_url = str_replace('http://default/', '', image_style_url('newsletter_thumb', $image_data['uri']));
+    $artc['image_url'] = url($images_style_url, array('absolute' => true, 'base_url' => $base_link_url));
+    $artc['body'] = $field_wrapper->field_cubiconews_article_body->value()['value'];
+    $article_link = $field_wrapper->field_cubiconews_article_link->value();
+    $artc['link'] = url($article_link['url'], array('absolute' => true, 'base_url' => $base_link_url));
+
+    $articles[] = $artc;
+  }
+
+
+  ob_start();
+  include($template_path . 'newsletter.php');
+  $mail_text .= ob_get_contents();
+  ob_end_clean();
+
+  return $mail_text;
 }
 
 
@@ -1170,17 +1229,12 @@ function _cubiconews_send_email($nid, $recipient_mail) {
   $node = node_load($nid);
 	$from = variable_get('system_mail', 'info@intercube.gr');
 
-  $mail_text = '';
   $my_module = 'cubiconews';
   $my_mail_token = microtime();
-  $module_path = drupal_get_path('module', 'cubiconews');
-  $template_path = $module_path . '/themes/node--cubiconews_item.tpl.php';
+  // $module_path = drupal_get_path('module', 'cubiconews');
+  // $template_path = $module_path . '/themes/';
 
-  // Include the tpl in buffer
-  ob_start();
-  include($template_path);
-  $mail_text .= ob_get_contents();
-  ob_end_clean();
+  $mail_text = _cubiconews_newsletter_prepare($nid);
 
   $message = array(
     'id' => $my_module . '_' . $my_mail_token,
