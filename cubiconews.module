@@ -8,8 +8,8 @@
  */
 
 // THESE ARE OBSOLETE AND SHOULD BE REMOVED
-define('CUBICONEWS_CRON_SEND_TIME', '23:00:00');
-define('CUBICONEWS_MAX_DCC', '2');
+//define('CUBICONEWS_CRON_SEND_TIME', '23:00:00');
+//define('CUBICONEWS_MAX_DCC', '2');
 
 
 /**
@@ -1230,7 +1230,7 @@ function _cubiconews_send_email($nid, $recipient_mail) {
 	$from = variable_get('system_mail', 'info@intercube.gr');
 
   $my_module = 'cubiconews';
-  $my_mail_token = microtime();
+  $my_mail_token = 'cubiconews_mailkey'; //microtime();
   // $module_path = drupal_get_path('module', 'cubiconews');
   // $template_path = $module_path . '/themes/';
 
@@ -1254,7 +1254,7 @@ function _cubiconews_send_email($nid, $recipient_mail) {
     )
   );
 
-  $system = drupal_mail_system('mimemail', $my_mail_token);
+  $system = drupal_mail_system('cubiconews', $my_mail_token);
   $message = $system->format($message);
   $result = $system->mail($message);
 }
