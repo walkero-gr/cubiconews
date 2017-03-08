@@ -1,7 +1,7 @@
 <!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-  <title>PameBolta Newsletter</title>
+  <title>Hello world</title>
   <!--[if !mso]><!-- -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!--<![endif]-->
@@ -223,8 +223,8 @@
       <![endif]--><div style="margin:0px auto;max-width:600px;background:#4e7b20;"><table role="presentation" cellpadding="0" cellspacing="0" style="font-size:0px;width:100%;background:#4e7b20;" align="center" border="0"><tbody><tr><td style="text-align:center;vertical-align:top;direction:ltr;font-size:0px;padding:20px 0px;"><!--[if mso | IE]>
       <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td style="vertical-align:middle;width:420px;">
       <![endif]--><div class="mj-column-per-70 outlook-group-fix" style="vertical-align:middle;display:inline-block;direction:ltr;font-size:13px;text-align:left;width:100%;"><table role="presentation" cellpadding="0" cellspacing="0" style="vertical-align:middle;" width="100%" border="0"><tbody><tr><td style="word-break:break-word;font-size:0px;padding:10px 25px;padding-top:0px;padding-bottom:0px;padding-right:25px;padding-left:25px;" align="left"><div class="" style="cursor:auto;color:#ffffff;font-family:Ubuntu, Helvetica, Arial, sans-serif, Helvetica, Arial, sans-serif;font-size:11px;line-height:22px;text-align:left;">
-          <span style="font-size: 13px;"><a href="https://pamebolta.gr" style="text-decoration: none; color: inherit;">PameBolta.gr</a></span>  -  <span style="font-size: 13px;"><a href="https://pamebolta.gr/node/6342" style="text-decoration: none; color: inherit;">Προσωπικά δεδομένα</a>
-        </span></div></td></tr></tbody></table></div><!--[if mso | IE]>
+          <span style="font-size: 13px;"><a href="https://pamebolta.gr" style="text-decoration: none; color: inherit;">PameBolta.gr</a></span>  -  <span style="font-size: 13px;"><a href="https://pamebolta.gr/node/6342" style="text-decoration: none; color: inherit;">Προσωπικά δεδομένα</a></span>
+        </div></td></tr></tbody></table></div><!--[if mso | IE]>
       </td><td style="vertical-align:middle;width:30px;">
       <![endif]--><div class="mj-column-px-30 outlook-group-fix" style="vertical-align:middle;display:inline-block;direction:ltr;font-size:13px;text-align:left;width:100%;"><table role="presentation" cellpadding="0" cellspacing="0" style="vertical-align:middle;" width="100%" border="0"><tbody><tr><td style="word-break:break-word;font-size:0px;padding:10px 25px;padding-top:0px;padding-bottom:0px;padding-right:0px;padding-left:0px;" align="center"><table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-spacing:0px;" align="center" border="0"><tbody><tr><td style="width:28px;"><a href="https://pamebolta.gr" target="_blank"><img alt="Pamebolta on Facebook" title="" height="auto" src="https://pamebolta.gr/sites/default/files/cubiconews/facebook.resized.png" style="border:none;border-radius:;display:block;outline:none;text-decoration:none;width:100%;height:auto;" width="28"></a></td></tr></tbody></table></td></tr></tbody></table></div><!--[if mso | IE]>
       </td><td style="vertical-align:middle;width:30px;">
