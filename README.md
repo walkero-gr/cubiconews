@@ -25,7 +25,7 @@ CubicoNews is a newsletter module for Drupal 7 that helps plain users to create 
 
 ## Start using Cubiconews
 ### Configuration
-As soon as you install Cubiconews, you have to configure it, by visiting the ** Configuration > CubicoNews Administration **, where you can set which content types can be used, which image fields will be used as main image for each article and the testing email accounts.
+As soon as you install Cubiconews, you have to configure it, by visiting the **Configuration > CubicoNews Administration**, where you can set which content types can be used, which image fields will be used as main image for each article and the testing email accounts.
 
 When you finish Cubiconews configuration, you are ready to create your newsletters.
 
@@ -35,7 +35,7 @@ To create a new newsletter you just have to add an article to it. If there is no
 If you edit this node, you can change the automatic generated title, and edit the articles that are included. You can also add more articles, by specifying their content, such as the photo, the body text and the link where this will lead. The link can be whatever you want. Finally, you can change their order by drag 'n drop.
 
 ### Newsletter manipulation
-You can also find all the newsletters at the admin page ** Configuration > CubicoNews Administration > Newsletters **. By that screen you can see the status of each newsletter, when they were sent and which one is active. If you click on the title you can view the newsletter. At the "operations" column you can select to send the newsletter. By the form you will see, you can "**_Send test_**" emails to the testing accounts. If the newsletter is ready and finalized, you can send it to all the active recipients by the "**_Send now_**", or you can schedule the sending of it for later time.
+You can also find all the newsletters at the admin page **Configuration > CubicoNews Administration > Newsletters**. By that screen you can see the status of each newsletter, when they were sent and which one is active. If you click on the title you can view the newsletter. At the "operations" column you can select to send the newsletter. By the form you will see, you can "**_Send test_**" emails to the testing accounts. If the newsletter is ready and finalized, you can send it to all the active recipients by the "**_Send now_**", or you can schedule the sending of it for later time.
 
 ### Recipients manipulation
 You can manipulate the recipients by the admin page **Configuration > CubicoNews Administration > Recipients**. At this page you can see how many active and inactive recipients your list has. After that you will find a list of all the emails. There you will find for each email account it's status, when it registered or removed. You can select multiple accounts by the checkbox at th left, and perform various actions on them, like enable, disable and remove.
