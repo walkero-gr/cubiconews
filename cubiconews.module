@@ -166,6 +166,11 @@ function cubiconews_menu() {
     'page callback' => '_cubiconews_headless_newsletter',
     'access callback' => true
   );
+  $items['newsletter/trck'] = array(
+    'title' =>  t('Newsletter'),
+    'page callback' => '_cubiconews_tracking_pixel',
+    'access callback' => true
+  );
 
 
 
@@ -338,7 +343,7 @@ function cubiconews_image_default_styles() {
     'effects' => array(
       array(
         'name' => 'image_scale_and_crop',
-        'data' => array('width' => 180, 'height' => 100),
+        'data' => array('width' => 540, 'height' => 282),
         'weight' => 0,
       ),
     )
@@ -545,11 +550,13 @@ function cubiconews_cron_queue_info() {
   return $queues;
 }
 
+
 function _cubiconews_send_emails_queue_process($data) {
   $data['update_label'] = 'send_email';
   _cubiconews_send_email($data['nid'], $data['data']['email']);
   //_cubiconews_queue_send_emails($data);
 }
+
 
 /*
  *  hook_node_delete
@@ -629,6 +636,85 @@ function _cubiconews_headless_newsletter() {
 }
 
 
+function _cubiconews_tracking_pixel() {
+  // tracnk the opening of the newsletters
+  if(!empty(arg(2))) {
+    _cubiconews_track_user(arg(2), 'read');
+  }
+
+  // Create an image, 1x1 pixel in size
+  $im=imagecreate(1,1);
+
+  // Set the background colour
+  $white=imagecolorallocate($im,255,255,255);
+
+  // Allocate the background colour
+  imagesetpixel($im,1,1,$white);
+
+  // Set the image type
+  header("content-type:image/jpg");
+
+  // Create a JPEG file from the image
+  imagejpeg($im);
+
+  // Free memory associated with the image
+  imagedestroy($im);
+  exit;
+}
+
+
+/*
+    @info This function updates the cubiconews_tracking when a new
+      newsletter is sent, by adding the recipients, and from the
+      tracking pixel, when a recipient opens the newsletter.
+      This is usefull for tracking by whom and when a newsletter
+      is viewed.
+
+    @param  $recipient_hash  string  The MD5 of a string that
+      includes the newsletter nodeid and the recipient's email
+    @param  $todo  string  Takes values
+      'new' to add a new recipient for a newsletter
+      'read' when a recipient opened a newsletter, triggered by
+        the tracking pixel
+    @param  $recipient_mail string  The recipient's email
+    @param  $nid  int The nid of the newsletter
+    @return nothing
+ */
+function _cubiconews_track_user($recipient_hash, $todo = 'read', $recipient_mail = NULL, $nid = 0) {
+  switch($todo) {
+    case 'new':
+      $metrics_query = db_merge('cubiconews_tracking')
+        ->insertFields(array(
+          'nid' => $nid,
+          'email' => $recipient_mail,
+          'status' => 0,
+          'cnt_read' => 0,
+          'opened' => '',
+          'datahash' => $recipient_hash
+        ))
+        ->updateFields(array(
+          'status' => 0,
+          'cnt_read' => 0,
+          'opened' => '',
+        ))
+        ->key(array(
+          'datahash' => $recipient_hash
+        ))
+        ->execute();
+      break;
+    case 'read':
+      $disable_email = db_update('cubiconews_tracking')
+        ->fields(array(
+            'status' => 1,
+            'cnt_read' => 1,
+            'opened' => time(),
+          ))
+        ->condition('datahash', $recipient_hash, '=')
+        ->execute();
+      break;
+  }
+}
+
 
 function _cubiconews_newsletter_prepare($nid) {
   $node = node_load($nid);
@@ -639,9 +725,9 @@ function _cubiconews_newsletter_prepare($nid) {
   if(!empty($base_url)) {
     $base_link_url = $base_url;
   } else {
-    $base_link_url = 'http://localhost:8060';
+    $base_link_url = 'http://localhost:8060';     // @todo add this to config page
   }
-  $newsletter['logo_img_url'] = url('themes/bartik/logo.png', array('absolute' => true, 'base_url' => $base_link_url));
+  //$newsletter['logo_img_url'] = url('themes/bartik/logo.png', array('absolute' => true, 'base_url' => $base_link_url));
   //$var_logourl = l('<img src="' . $var_logoimg . '" alt="Espressonews.gr Newsletter" title="Espressonews.gr Newsletter">', '<front>', array('html' => true, 'attributes' => array('target' => '_blank')));
 
   $newsletter['title'] = $node->title;
@@ -669,7 +755,7 @@ function _cubiconews_newsletter_prepare($nid) {
 
   ob_start();
   include($template_path . 'newsletter.php');
-  $mail_text .= ob_get_contents();
+  $mail_text = ob_get_contents();
   ob_end_clean();
 
   return $mail_text;
@@ -1152,14 +1238,14 @@ function _cubiconews_removenewsletter () {
 
 
 function _cubiconews_register_ok() {
-	$output = t('Thank you for your registration. From now on you are going to receive our newsletter emails to your inbox.');
+	$output = t('Thank you for your registration. From now on you are going to receive our newsletter emails to your inbox.');     // @todo add this to config page
 
 	return $output;
 }
 
 
 function _cubiconews_email_remove_ok() {
-	$output = t('We are sorry you decided to not receive our newsletters any more. We hope to reconsider and register back again.');
+	$output = t('We are sorry you decided to not receive our newsletters any more. We hope to reconsider and register back again.');     // @todo add this to config page
 
 	return $output;
 }
@@ -1173,6 +1259,7 @@ function _extract_emails($emailtext) {
 
 	return $email;
 }
+
 
 function _register_email($newemail, $enable_existing = true) {
 	// Check first if the email already exists in our database
@@ -1207,8 +1294,8 @@ function _register_email($newemail, $enable_existing = true) {
 	return $ret;
 }
 
+
 function _get_tpl_path() {
-	//echo $newsletter_id . '~~~';
 	print_r($theme_registry);
 	$theme_path = path_to_theme();
 	//$theme_path = drupal_get_filename('theme', 'node--cubiconews_item.tpl');
@@ -1226,15 +1313,26 @@ function _get_tpl_path() {
 
 
 function _cubiconews_send_email($nid, $recipient_mail) {
+  global $base_url;
+  if(!empty($base_url)) {
+    $base_link_url = $base_url;
+  } else {
+    $base_link_url = 'http://localhost:8060';     // @todo add this to config page
+  }
+
   $node = node_load($nid);
+  $recipient_hash = md5($nid . '~' . $recipient_mail);
+
 	$from = variable_get('system_mail', 'info@intercube.gr');
 
   $my_module = 'cubiconews';
   $my_mail_token = 'cubiconews_mailkey'; //microtime();
-  // $module_path = drupal_get_path('module', 'cubiconews');
-  // $template_path = $module_path . '/themes/';
 
   $mail_text = _cubiconews_newsletter_prepare($nid);
+
+  // Add the tracking pixel
+  $tracking_pixel_tag = '<img src="' . $base_link_url . '/newsletter/trck/' . $recipient_hash . '" width="1" height="1">';
+  $mail_text = str_replace('<!--tracking_pixel-->', $tracking_pixel_tag, $mail_text);
 
   $message = array(
     'id' => $my_module . '_' . $my_mail_token,
@@ -1257,8 +1355,8 @@ function _cubiconews_send_email($nid, $recipient_mail) {
   $system = drupal_mail_system('cubiconews', $my_mail_token);
   $message = $system->format($message);
   $result = $system->mail($message);
+
+  // Add the user for tracking as a new recipient for this newsletter
+  _cubiconews_track_user($recipient_hash, 'new', $recipient_mail, $nid);
+
 }
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///// Get newsletter articles Functions ///////////////////////////////////////////////////////////////////////////

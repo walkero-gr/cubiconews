@@ -21,10 +21,8 @@ class CubicoNewsMailSystem implements MailSystemInterface {
   /**
    * Send an e-mail message, using Drupal variables and default settings.
    *
-   * @see <a href="http://php.net/manual/en/function.mail.php
-" title="http://php.net/manual/en/function.mail.php
-" rel="nofollow">http://php.net/manual/en/function.mail.php
-</a>   * @see drupal_mail()
+   * @see http://php.net/manual/en/function.mail.php
+   * @see drupal_mail()
    *
    * @param $message
    *   A message array, as described in hook_mail_alter().
@@ -51,4 +49,3 @@ class CubicoNewsMailSystem implements MailSystemInterface {
     );
   }
 }
-

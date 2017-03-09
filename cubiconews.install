@@ -288,10 +288,11 @@ function cubiconews_schema() {
         'not null' => TRUE,
       ),
       'nid' => array(
-        'description' => 'The node id of the newsletter',
         'type' => 'int',
         'unsigned' => TRUE,
+        'size' => 'big',
         'not null' => TRUE,
+        'default' => 0,
       ),
       'status' => array(
         'type' => 'int',
@@ -317,6 +318,65 @@ function cubiconews_schema() {
       ),
     ),
     'primary key' => array('nlid'),
+  );
+
+  // Tracking table
+  $schema['cubiconews_tracking'] = array(
+    'fields' => array(
+      'trid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The newsletter node id',
+      ),
+      'email' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => 'The recipient email',
+      ),
+      'status' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => '0-unread, 1-read',
+      ),
+      'cnt_read' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'This is how many times the same person opened the newsletter',
+      ),
+      'opened' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => 'The timestamp when the newsletter has been opened by the user the last time',
+      ),
+      'datahash' => array(
+        'type' => 'char',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'This datahash has the email of the user and the ID of the newsletter. This is the MD5 of the values.',
+      )
+    ),
+    'primary key' => array('trid'),
+    'indexes' => array(
+      'datahash' => array('datahash')
+    ),
   );
 
   return $schema;

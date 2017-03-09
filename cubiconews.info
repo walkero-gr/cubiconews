@@ -2,7 +2,7 @@ name = Cubiconews
 description = Cubiconews newsletter system
 core = 7.x
 package = InterCube media
-version = "7.x-1.5-dev"
+version = "7.x-1.0-dev"
 
 configure = admin/config/content/cubiconews
 

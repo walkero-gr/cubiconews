@@ -577,7 +577,7 @@ function cubiconews_newsletter_send_form_submit ($form, &$form_state) {
       foreach($emails_array[0] AS $recipient_email) {
         _cubiconews_send_email($current_nid, $recipient_email);
       }
-      drupal_set_message(t('Test email sent to @cnt emails!', array('@cnt' => count($emails_array))), 'status');
+      drupal_set_message(t('Test email sent to @cnt emails!', array('@cnt' => count($emails_array[0]))), 'status');
       break;
   }
 }
