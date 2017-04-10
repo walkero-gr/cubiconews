@@ -628,6 +628,7 @@ function _cubiconews_newsletter_prepare($nid) {
 
   $newsletter['title'] = $node->title;
   $newsletter['url'] = $base_link_url . '/newsletter/' . $nid;
+  $newsletter['website_url'] = $base_link_url;
 
   $articles = array();
   $field_collection_fields = field_get_items('node', $node, 'field_cubiconews_article_group');
