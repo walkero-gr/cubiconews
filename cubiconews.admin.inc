@@ -547,28 +547,29 @@ function cubiconews_newsletter_send_form_submit ($form, &$form_state) {
       $queue->createQueue();
 
       $query = db_select('cubiconews_emails', 'cube');
-      $query->fields('cube',array('eid', 'name', 'surname', 'email', 'status'))
+      $query->fields('cube',array('eid'))
         ->condition('cube.status', 1, '=');
       $result = $query->execute();
       $emails_num = $result->rowCount();
 
-      $options = array();
-      $options['nid'] = $current_nid;
-      while($record = $result->fetchAssoc()) {
-        //krumo($record);
-        $options['data'] = $record;
-        $queue->createItem($options);
-      }
+      // Set up batch
+      $batch = array(
+        'operations' => array(),
+        'title' => t('Cubiconews: Set queues for newsletter sending'),
+        'init_message' => t('Setting queues is starting.'),
+        'progress_message' => t('Processed @current out of @total.'),
+        'error_message' => t('Setting queues has encountered an error.'),
+        'finished' => '_cubiconews_build_queues_batch_finished'
+      );
 
-      $num_updated = db_update('cubiconews_newsletters')
-        ->fields(array(
-            'sent' => time(),
-            'status' => 9
-          ))
-        ->condition('nid', $current_nid, '=')
-        ->execute();
-      drupal_set_message(t('Email queued to be send to @cnt emails!', array('@cnt' => $emails_num)), 'status');
-      drupal_goto('admin/config/content/cubiconews/newsletters');
+      $progress = 0; // where to start
+      $limit = 250; // how many to process for each run
+      $max = $emails_num; // how many records to process until stop - can do query here to get max times to run
+      while ($progress <= $max) {
+        $batch['operations'][] = array('_cubiconews_build_queues_batch_process', array($progress, $limit, $current_nid, $queue));
+        $progress = $progress + $limit;
+      }
+      batch_set($batch);
       break;
     case 'sendtest':
       $emails = variable_get('cubiconews_config_test_emails', 'info@intercube.gr');

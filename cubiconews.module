@@ -447,6 +447,52 @@ function _cubiconews_send_emails_queue_process($data) {
 }
 
 
+function _cubiconews_build_queues_batch_process($progress, $limit, $current_nid, $queue, &$context) {
+  $query = db_select('cubiconews_emails', 'cube');
+  $query->fields('cube',array('eid', 'name', 'surname', 'email', 'status'))
+    ->condition('cube.status', 1, '=');
+  $query->range($progress, $limit);
+
+  $result = $query->execute();
+  $emails_num = $result->rowCount();
+
+  $options = array();
+  $options['nid'] = $current_nid;
+  while($record = $result->fetchAssoc()) {
+    $options['data'] = $record;
+    $queue->createItem($options);
+  }
+  if(empty($context['results']['total_emails'])) $context['results']['total_emails'] = 0;
+  $context['results']['total_emails'] += $emails_num;
+  $context['results']['newsletter_nid'] = $current_nid;
+}
+
+
+function _cubiconews_build_queues_batch_finished($success, $results, $operations) {
+  if ($success) {
+    // Set newsletter as already sent
+    $num_updated = db_update('cubiconews_newsletters')
+      ->fields(array(
+          'sent' => time(),
+          'status' => 9
+        ))
+      ->condition('nid', $results['newsletter_nid'], '=')
+      ->execute();
+
+    drupal_set_message(t('Email queued to be send to @cnt emails!', array('@cnt' => $results['total_emails'])), 'status');
+    drupal_goto('admin/config/content/cubiconews/newsletters');
+  }
+  else {
+    $error_operation = reset($operations);
+    $message = t('An error occurred while processing %error_operation with arguments: @arguments', array(
+      '%error_operation' => $error_operation[0],
+      '@arguments' => print_r($error_operation[1], TRUE)
+    ));
+    drupal_set_message($message, 'error');
+  }
+}
+
+
 /*
  *  hook_node_delete
  *

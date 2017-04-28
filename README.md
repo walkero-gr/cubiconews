@@ -61,12 +61,14 @@ To make this work, do not forget to add `<!--tracking_pixel-->` just before the 
 
 
 ## TODO list
-* Create graphic stats where the user can see the evolution of recipients' registrations/removals
-* Add Statistics tab at the newsletters' page
-* Disable a newsletter after it is sent
-* Add specific link on every link in newsletter, that will count the clicks, for statistics
-* Setup scheduled email send procedure using cron
-* Add fields in the config page for the default messages, like the "Successful registration" or "email removal"
-* Create an email that would be send to the user to enable/approve his registration. This should have a token that would expire after specific time, and would help for the validation of the email account
-* Email validation should get it's own function
-* Add email Groups
+* CHANGE: Make emails addition a batch procedure
+* BUG: Fix the image selection per content type to be used when a node is added at a newsletter
+* ADD: Create graphic stats where the user can see the evolution of recipients' registrations/removals
+* ADD: Add Statistics tab at the newsletters' page
+* ADD: Disable a newsletter after it is sent
+* FEATURE: Add specific link on every link in newsletter, that will count the clicks, for statistics
+* FEATURE: Setup scheduled email send procedure using cron
+* ADD: Add fields in the config page for the default messages, like the "Successful registration" or "email removal"
+* FEATURE: Create an email that would be send to the user to enable/approve his registration. This should have a token that would expire after specific time, and would help for the validation of the email account
+* CHANGE: Email validation should get it's own function
+* FEATURE: Add email Groups

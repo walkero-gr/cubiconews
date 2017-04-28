@@ -1,41 +1,74 @@
 @todo
 ------------------------------------------------
-- Make a theme and a tpl for the Newsletter node
-- Code cleanup
-- Create generic newsletter sending function that will send each single email with the recipient at the TO field
-- Create search and edit of one or more emails. Multiple deletion/disable/enable should be feasible
-- Create the emails manipulation page
-- Add the count of the disabled and enabled emails
-- Create graphic stats where the user can see the change of email registrations/removals
-- Add button to submit to test emails
-- Add Statistics tab at the Cubiconews node pages
-- Add check at the cubiconews_add_node() if the user selected an image field for the specific node type, and get the Image from this field
-- Set up the submition of the newsletters using cron
-- Add the page where the user can add new emails
-- Created generic newsletter sending function, triggered from page or by cron, passing the newsletter ID
-- Disable a newsletter after it was sent
-- Add new newsletter status for automatic sending by cron, so that cron will send only these newsletters. Add a new button "Ready for automatic send".
-- Add new newsletter status for the disabled newsletter.
-- Create the Newsletter preview page
-- Create the transmission functionality
-- Add an image 1x1 for the opening statistics of the newsletter
-- Add specific link on every link in newsletter, that will count the clicks, for statistics
-- Create template functions to get articles, like get_three_first or get_5last
-- At the "cubiconews/registration_remove" check if the email exists and show a different message at the result (optional)
+* Make a theme and a tpl for the Newsletter node
+* Code cleanup
+* Create graphic stats where the user can see the change of email registrations/removals
+* Add Statistics tab at the Cubiconews node pages
+* Add check at the cubiconews_add_node() if the user selected an image field for the specific node type, and get the Image from this field
+* Set up the submition of the newsletters using cron
+* Disable a newsletter after it was sent
+* Add specific link on every link in newsletter, that will count the clicks, for statistics
+* Create template functions to get articles, like get_three_first or get_5last
+* At the "cubiconews/registration_remove" check if the email exists and show a different message at the result (optional)
+
+* Setup scheduled email send procedure using cron
+* Setup a better way to design the email template
+* Set up statistics page for each newsletter
+* Add fields in the config page for the default messages, like the "Successful registration" or "email removal"
+* Create an email that would be send to the user to enable/approve his registration. This should have a token that would expire after a day, and would help for the validation of the email account
+* Email validation should get it's own function
+* Add confirmation template
+* Set the newsletter templates that are going to be used by the admin page
 
 
 
 
-@changelog
-------------------------------------------------
+# changelog
+
+2017-04-28
+* Now the queues on sending a newsletter are created by batch process. This helps to prevent crashes on lists with too many (over 5000) available emails
+
+2017-03-09
+* Create generic newsletter sending function that will send each single email with the recipient at the TO field
+* Add button to submit to test emails
+* Add the page where the user can add new emails
+* Create generic newsletter sending function, triggered from page or by cron, passing the newsletter ID
+* Add new newsletter status for the disabled newsletter.
+* Create the Newsletter preview page
+* Create the transmission functionality
+* Add an image 1x1 for the opening statistics of the newsletter
+* Set "Schedule" fields in the Newsletter form
+* Setup "Send Now" procedure
+* Setup "Send test" procedure
+* Setup queue for email sending
+
+2017-03-03
+* Add an admin page to insert emails and remove all of them from the database. There should be a confirm mandatory checkbox for the user.
+* Added header titles for the admin pages
+
+2017-03-02
+* Re-enabled the creation of the database table "cubiconews_newsletters" but reduced it's fields, removing the data that exist in the newsletters node
+* Created the Newsletters list page, where all the newsletters are show. There is also a way to delete them, with multiple selection
+* Enabled the tab link in the nodes, which is used to add a node to the newsletter. This was disabled in previous commit
+* Added the hook_node_delete where the delete newsletters nodes are also removed from the "cubiconews_newsletters" database table
+* Disabled the functions "_cubiconews_newsletter_list" and "_cubiconews_newsletter_addnew" as obsolete
+* Updated the email list page. Now it shows all the emails in a table with sortable columns, paging and multi*selected operations, like "Enable selected emails", "Disable selected emails" and "Remove selected emails"
+* Added a checkbox at the import form, to select if the existing disabled emails should be enabled, in case these are in the provided import list
+* Updated the function "_register_email" to support the update checkbox. By default the email is reenabled, which might be the cases that a user inserts again an email from the newsletter block form
+* Disabled the creation of the database table "cubiconews_newsletters", because now the newsletters are nodes, and this is not needed
+* Updated the table "cubiconews_emails" by adding the fields name and surname for future usage, and by renaming the timestamp fields, their type and length
+* Moved "cubiconews_emails" page to a Drupal form, at the cubiconews.admin.inc file
+* Moved "cubiconews_emails_add_form" at the cubiconews.admin.inc file and renamed as "cubiconews_addemails_form"
+* Reorganized the cubiconews_menu hook and updated the setup of the admin pages, to be visible as tabs under "admin/config/content/cubiconews"
+
+
 2015-06-05
-- Make admin page where user selects the supported content types
-- Set in the admin page which image field should be imported per supported content type
-- Added a textarea at the preferences page where the administrator can insert the testing email accounts
-- Add the checks to show the "Add to CubicoNews" link at the node pages, depending the user access and node selection from the CubicoNews preferences
-
+* Make admin page where user selects the supported content types
+* Set in the admin page which image field should be imported per supported content type
+* Added a textarea at the preferences page where the administrator can insert the testing email accounts
+* Add the checks to show the "Add to CubicoNews" link at the node pages, depending the user access and node selection from the CubicoNews preferences
 
 2015-06-04
-- Create a new Newsletter if there is none available
-- Create the new content type "CubicoNews Newsletter", based on field collection. Now each newsletter is one single node, and each article is a field collection in it.
-- Add articles in Newsletter from every supported content type node page, using a tab
+* Create a new Newsletter if there is none available
+* Create the new content type "CubicoNews Newsletter", based on field collection. Now each newsletter is one single node, and each article is a field collection in it.
+* Add articles in Newsletter from every supported content type node page, using a tab
