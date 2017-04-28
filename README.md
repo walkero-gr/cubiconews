@@ -61,7 +61,6 @@ To make this work, do not forget to add `<!--tracking_pixel-->` just before the 
 
 
 ## TODO list
-* CHANGE: Make emails addition a batch procedure
 * BUG: Fix the image selection per content type to be used when a node is added at a newsletter
 * ADD: Create graphic stats where the user can see the evolution of recipients' registrations/removals
 * ADD: Add Statistics tab at the newsletters' page

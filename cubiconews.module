@@ -843,3 +843,47 @@ function _cubiconews_send_email($nid, $recipient_mail) {
   _cubiconews_track_user($recipient_hash, 'new', $recipient_mail, $nid);
 
 }
+
+
+/*
+    @info   Batch process to import a big number of emails
+
+    @param  $progress   int  The current progress step
+    @param  $limit      int  The maximum number of processed emails
+    @param  $emails     Array   All the emails found
+    @param  $enable_existing    boolean   A boolean to specify if the
+            existing emails shold be updated
+    @param  $context    Array   The context array of the barch
+    @return nothing
+ */
+function _cubiconews_import_emails_batch_process($progress, $limit, $emails, $enable_existing, &$context) {
+  if(empty($context['results']['new'])) $context['results']['new'] = 0;
+  if(empty($context['results']['upd'])) $context['results']['upd'] = 0;
+
+  for($i = $progress; $i < ($progress+$limit); $i++) {
+    if(!empty($emails[$i])) {
+    	$ret = _register_email($emails[$i], $enable_existing);
+    	if($ret == 'new') { // email added in database
+    		$context['results']['new']++;
+    	}
+    	if($ret == 'upd') { // email updated and enabled
+    		$context['results']['upd']++;
+    	}
+    }
+  }
+}
+
+
+function _cubiconews_import_emails_batch_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('@adds emails added! @upds emails updated!', array('@adds' => $results['new'], '@upds' => $results['upd'])), 'status');
+  }
+  else {
+    $error_operation = reset($operations);
+    $message = t('An error occurred while processing %error_operation with arguments: @arguments', array(
+      '%error_operation' => $error_operation[0],
+      '@arguments' => print_r($error_operation[1], TRUE)
+    ));
+    drupal_set_message($message, 'error');
+  }
+}

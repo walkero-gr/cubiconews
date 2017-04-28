@@ -266,20 +266,26 @@ function cubiconews_addemails_form_submit ($form, &$form_state) {
 	$extracted_emails = _extract_emails($emails_address);
 
 	$emails = array_unique($extracted_emails[0]);
-	$add_cnt = 0;
-	$upd_cnt = 0;
-	foreach($emails AS $curemail) {
-		$ret = _register_email($curemail, $enable_existing);
-		if($ret == 'new') { // email added in database
-			$add_cnt++;
-		}
-		if($ret == 'upd') { // email updated and enabled
-			$upd_cnt++;
-		}
-	}
-	//watchdog('cubiconews', '%adds emails added! %upds emails updated!', array('%adds' => $add_cnt, '%upds' => $upd_cnt), WATCHDOG_INFO);
+  $emails_num = count($emails);
 
-	drupal_set_message(t('@adds emails added! @upds emails updated!', array('@adds' =>$add_cnt, '@upds' => $upd_cnt)), 'status');
+  // Set up batch
+  $batch = array(
+    'operations' => array(),
+    'title' => t('Cubiconews: Import emails'),
+    'init_message' => t('Import emails is starting.'),
+    'progress_message' => t('Processed @current out of @total.'),
+    'error_message' => t('Import emails has encountered an error.'),
+    'finished' => '_cubiconews_import_emails_batch_finished'
+  );
+
+  $progress = 0; // where to start
+  $limit = 500; // how many to process for each run
+  $max = $emails_num; // how many records to process until stop - can do query here to get max times to run
+  while ($progress <= $max) {
+    $batch['operations'][] = array('_cubiconews_import_emails_batch_process', array($progress, $limit, $emails, $enable_existing));
+    $progress = $progress + $limit;
+  }
+  batch_set($batch);
 }
 
 

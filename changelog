@@ -27,6 +27,7 @@
 
 2017-04-28
 * Now the queues on sending a newsletter are created by batch process. This helps to prevent crashes on lists with too many (over 5000) available emails
+* Now the import of the emails is done by a batch process. This solves the problem of the import of huge email lists. 24000 emails imported with no problem.
 
 2017-03-09
 * Create generic newsletter sending function that will send each single email with the recipient at the TO field
