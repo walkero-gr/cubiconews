@@ -59,6 +59,16 @@ function _cubiconews_admin_preferences_form($form, &$form_state){
 		}
 	}
 
+  $systemEmail = variable_get('system_mail');
+	$form['cubiconews_config_sender_email'] = array(
+		'#type' => 'textfield',
+		'#title' => 'Sender email',
+		'#default_value' => variable_get('cubiconews_config_sender_email', $systemEmail),
+		'#size' => 60,
+		'#required' => TRUE,
+		'#description' => 'Set the sender email account from which the newsletter is sent.'
+	);
+
 	// Add the testing email accounts textarea
 	$form['cubiconews_config_test_emails'] = array(
 		'#type' => 'textarea',
@@ -76,6 +86,15 @@ function _cubiconews_admin_preferences_form($form, &$form_state){
 
 	return $form;
 }
+function _cubiconews_admin_preferences_form_validate($form, &$form_state) {
+  $email_address = _extract_emails($form_state['values']['cubiconews_config_sender_email']);
+
+	if (empty($email_address[0][0])) {
+    form_set_error('cubiconews_config_sender_email', t('Your email address is not valid.'));
+	} else {
+    $form_state['values']['cubiconews_config_sender_email'] = $email_address[0][0];
+  }
+}
 
 function _cubiconews_admin_preferences_form_submit ($form, &$form_state){
 	$nodeavailability = $form_state['values']['cubiconews_config_selected_contenttypes'];
@@ -86,6 +105,7 @@ function _cubiconews_admin_preferences_form_submit ($form, &$form_state){
 		}
 	}
 	variable_set('cubiconews_config_selected_contenttypes', $form_state['values']['cubiconews_config_selected_contenttypes']);
+	variable_set('cubiconews_config_sender_email', $form_state['values']['cubiconews_config_sender_email']);
 	variable_set('cubiconews_config_test_emails', $form_state['values']['cubiconews_config_test_emails']);
 
 	drupal_set_message(t('Configuration saved succesfully.'), 'status');

@@ -800,13 +800,15 @@ function _cubiconews_send_email($nid, $recipient_mail) {
   if(!empty($base_url)) {
     $base_link_url = $base_url;
   } else {
-    $base_link_url = 'http://localhost:8060';     // @todo add this to config page
+    $base_link_url = $GLOBALS['base_url'];    // @todo add this to config page
+    if($_SERVER['SERVER_PORT'] != 80) {
+      $base_link_url .= $_SERVER['SERVER_PORT'];
+    }
   }
 
   $node = node_load($nid);
   $recipient_hash = md5($nid . '~' . $recipient_mail);
-
-	$from = variable_get('system_mail', 'info@intercube.gr');
+	$from = variable_get('cubiconews_config_sender_email', '');
 
   $my_module = 'cubiconews';
   $my_mail_token = 'cubiconews_mailkey'; //microtime();
