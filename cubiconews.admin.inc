@@ -347,6 +347,7 @@ function cubiconews_newsletters_form($form, &$form_state) {
     'sent' => array('data' => t('Date Sent'), 'field' => 'cubnl.sent'),
     'schedule' => array('data' => t('Scheduled'), 'field' => 'cubnl.schedule'),
     'operations' => array('data' => t('Operations')),
+    'statistics' => array('data' => t('Statistics')),
   );
 
   $query = db_select('cubiconews_newsletters', 'cubnl')->extend('PagerDefault')->extend('TableSort');
@@ -404,6 +405,13 @@ function cubiconews_newsletters_form($form, &$form_state) {
           '#href' => 'admin/config/content/cubiconews/' . $record['nid'] . '/send',
           //'#options' => $uri['options'],
           //'#suffix' => ' ' . theme('mark', array('type' => node_mark($record['nid'], $record['changed']))),
+        ),
+			),
+			'statistics' => array(
+        'data' => array(
+          '#type' => 'link',
+          '#title' => t('Statistics'),
+          '#href' => 'admin/config/content/cubiconews/' . $record['nid'] . '/stats'
         ),
       ),
     );

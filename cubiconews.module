@@ -118,7 +118,15 @@ function cubiconews_menu() {
     'file' => 'cubiconews.admin.inc',
     'file path' => drupal_get_path('module', 'cubiconews'),
   );
-
+  $items['admin/config/content/cubiconews/%/stats'] = array(
+    'title' => t('Newsletter statistics'),
+    'description' => t('See the newsletter statistics'),
+    'page callback' => '_cubiconews_newsletter_stats',
+    'page arguments' => array(1),
+    'access callback' => 'user_access',
+    'access arguments' => array('send cubiconews newsletter'),
+    'type' => MENU_CALLBACK
+  );
 
 
 
@@ -888,4 +896,59 @@ function _cubiconews_import_emails_batch_finished($success, $results, $operation
     ));
     drupal_set_message($message, 'error');
   }
+}
+
+
+function _cubiconews_newsletter_stats() {
+  $current_nid = arg(4);
+  $node = node_load($current_nid);
+
+
+  $newsletter_info_query = db_select('cubiconews_newsletters', 'cubn')
+    ->fields('cubn',array('nid', 'status', 'sent'))
+    ->condition('cubn.nid', $current_nid, '=')
+    ->execute();
+  $newsletter_info_record = $newsletter_info_query->fetchAssoc();
+  //$query->join('cubiconews_tracking', 'cubtr', 'cubtr.nid = cubn.nid');
+
+  $recipients_query = db_select('cubiconews_tracking', 'cubtr')
+    ->fields('cubtr',array('nid', 'status'));
+  $recipients_query->addExpression('COUNT(*)', 'cnt');
+  $recipients_query->condition('cubtr.nid', $current_nid, '=')
+    ->groupBy('cubtr.status');
+  $recipients_result = $recipients_query->execute();
+  $status_count = array();
+  while($recipients_record = $recipients_result->fetchAssoc()) {
+    $status_count[$recipients_record['status']] = $recipients_record['cnt'];
+  }
+
+  $num_of_recipients = $status_count[0] + $status_count[1];
+
+  // Calculate open rate
+  $openrate = round(($status_count[1] / $num_of_recipients) * 100, 2);
+
+  $output = '';
+  $output .= '<strong>';
+  $output .= t('Subject') . ': ';
+  $output .= '</strong>';
+  $output .= $node->title;
+  $output .= '<br />';
+  $output .= '<strong>';
+  $output .= t('Delivered') . ': ';
+  $output .= '</strong>';
+  $output .= format_date($newsletter_info_record['sent'], 'long');
+  $output .= '<br />';
+  $output .= '<strong>';
+  $output .= t('Recipients') . ': ';
+  $output .= '</strong>';
+  $output .= $num_of_recipients;
+  $output .= '<br />';
+  $output .= '<strong>';
+  $output .= t('Unique opened') . ': ';
+  $output .= '</strong>';
+  $output .= $status_count[1];
+  $output .= ' (' . $openrate . '% Open Rate)';
+  $output .= '<br />';
+
+  return $output;
 }
