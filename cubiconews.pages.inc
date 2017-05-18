@@ -52,13 +52,16 @@ function cubiconews_add_node($sourceNode){
 		$entity->field_cubiconews_article_body[LANGUAGE_NONE][] = array('value' => $sourceNode->body[LANGUAGE_NONE][0]['safe_value']);
 	}
 
-	if(isset($sourceNode->field_image['und'])) {
+  // Get the selected image field for this content type
+  $imageFieldSelected = variable_get('cubiconews_config_image_field_' . $sourceNode->type, '');
+  $imageFieldObj = $sourceNode->{$imageFieldSelected}['und'];
+	if(isset($imageFieldObj)) {
 		$file = (object)array(
 		  "uid" => 1,
-		  "alt" => $sourceNode->field_image['und'][0]['alt'],
-	  	"title" => $sourceNode->field_image['und'][0]['title'],
-		  "uri" => $sourceNode->field_image['und'][0]['uri'],
-		  "filemime" => file_get_mimetype($sourceNode->field_image['und'][0]['uri']),
+		  "alt" => $imageFieldObj[0]['alt'],
+	  	"title" => $imageFieldObj[0]['title'],
+		  "uri" => $imageFieldObj[0]['uri'],
+		  "filemime" => file_get_mimetype($imageFieldObj[0]['uri']),
 		  "status" => 1
 		);
 		$file = file_copy($file, 'public://cubiconews', FILE_EXISTS_RENAME);

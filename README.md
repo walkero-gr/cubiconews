@@ -61,10 +61,7 @@ To make this work, do not forget to add `<!--tracking_pixel-->` just before the 
 
 
 ## TODO list
-* BUG: Fix the image selection per content type to be used when a node is added at a newsletter
 * ADD: Create graphic stats where the user can see the evolution of recipients' registrations/removals
-* ADD: Add Statistics tab at the newsletters' page
-* ADD: Disable a newsletter after it is sent
 * FEATURE: Add specific link on every link in newsletter, that will count the clicks, for statistics
 * FEATURE: Setup scheduled email send procedure using cron
 * ADD: Add fields in the config page for the default messages, like the "Successful registration" or "email removal"

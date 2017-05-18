@@ -3,17 +3,12 @@
 * Make a theme and a tpl for the Newsletter node
 * Code cleanup
 * Create graphic stats where the user can see the change of email registrations/removals
-* Add Statistics tab at the Cubiconews node pages
-* Add check at the cubiconews_add_node() if the user selected an image field for the specific node type, and get the Image from this field
 * Set up the submition of the newsletters using cron
-* Disable a newsletter after it was sent
 * Add specific link on every link in newsletter, that will count the clicks, for statistics
-* Create template functions to get articles, like get_three_first or get_5last
 * At the "cubiconews/registration_remove" check if the email exists and show a different message at the result (optional)
 
 * Setup scheduled email send procedure using cron
 * Setup a better way to design the email template
-* Set up statistics page for each newsletter
 * Add fields in the config page for the default messages, like the "Successful registration" or "email removal"
 * Create an email that would be send to the user to enable/approve his registration. This should have a token that would expire after a day, and would help for the validation of the email account
 * Email validation should get it's own function
@@ -24,6 +19,9 @@
 
 
 # changelog
+
+2017-05-18
+* Fixed the image selection per content type to be used when a node is added at a newsletter
 
 2017-05-15
 * Now the user can set the sender email from the configuration page
